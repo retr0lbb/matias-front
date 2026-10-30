@@ -7,16 +7,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  ArrowUp,
   Book,
   ChevronDown,
+  ChevronsUpDown,
   MessageCircleDashed,
   PanelLeft,
-  Paperclip,
   Ruler,
   Search,
 } from "lucide-react";
@@ -25,7 +22,7 @@ export default function Home() {
   return (
     <div className="w-screen h-screen flex items-center justify-center gap-2">
       <nav
-        className="h-screen w-1/4 bg-zinc-100 border-r border-zinc-950/20 rounded-tr-lg 
+        className="h-screen w-1/3 overflow-hidden bg-zinc-100 border-r border-zinc-950/20 rounded-tr-lg 
         rounded-br-lg flex flex-col"
       >
         <header className="w-full flex items-center justify-between px-2 py-2.5">
@@ -93,7 +90,10 @@ export default function Home() {
           <CollapsibleContent className="w-full min-h-0 flex-1">
             <ScrollArea className="h-full w-full mt-2 px-2">
               <div className="flex flex-col gap-1.5">
-                <ChatSideBarItems text="O que significa Farmar Aura" />
+                <ChatSideBarItems
+                  text="O que significa Farmar Aura"
+                  isSelected
+                />
                 <ChatSideBarItems text="A correlação entre o Iluminismo e a queda do muro de Berlim em 1940" />
                 <ChatSideBarItems text="Ideias de aula GenZ Com Aura" />
                 <ChatSideBarItems text="Atividade Avaliativa Historia 2026 tema Guerra Fria" />
@@ -113,16 +113,11 @@ export default function Home() {
               <p className="text-sm text-zinc-900">Henrique Barbosa</p>
               <p className="text-xs text-zinc-700">retr0lbb@gmail.com</p>
             </div>
+
+            <ChevronsUpDown className="text-zinc-400" />
           </div>
         </div>
       </nav>
-
-      <div className="flex w-full h-full">
-        <div className="flex flex-1 flex-col items-center justify-center gap-2">
-          <p className="text-2xl">Olá, Como posso te ajudar?</p>
-          <ChatInput />
-        </div>
-      </div>
     </div>
   );
 }
