@@ -1,24 +1,22 @@
-import { CategoryItem } from "@/components/category-item";
+import { ChatInput } from "@/components/chat-input";
 import { ChatSideBarItems } from "@/components/chat-sidebar-items";
-import { Accordion, AccordionItem } from "@/components/ui/accordion";
-import {
-  Avatar,
-  AvatarBadge,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import {
+  ArrowUp,
   Book,
   ChevronDown,
   MessageCircleDashed,
   PanelLeft,
+  Paperclip,
   Ruler,
   Search,
 } from "lucide-react";
@@ -119,7 +117,12 @@ export default function Home() {
         </div>
       </nav>
 
-      <div className="flex flex-1 w-full h-full bg-zinc-950"></div>
+      <div className="flex w-full h-full">
+        <div className="flex flex-1 flex-col items-center justify-center gap-2">
+          <p className="text-2xl">Olá, Como posso te ajudar?</p>
+          <ChatInput />
+        </div>
+      </div>
     </div>
   );
 }
