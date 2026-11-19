@@ -1,3 +1,4 @@
+import { AuthGuard } from "@/components/auth-guard";
 import { Sidebar } from "@/components/sidebar";
 
 export default function ChatLayout({
@@ -6,9 +7,11 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-screen h-screen flex items-center justify-center gap-2">
-      <Sidebar />
-      {children}
-    </div>
+    <AuthGuard>
+      <div className="flex h-screen w-screen overflow-hidden bg-background">
+        <Sidebar />
+        <main className="flex min-w-0 flex-1">{children}</main>
+      </div>
+    </AuthGuard>
   );
 }

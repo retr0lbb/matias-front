@@ -1,8 +1,8 @@
 "use client";
 
-import { Brain, Check, ChevronUp, Lock } from "lucide-react";
-import { useState } from "react";
+import { Brain, Check, ChevronDown, ChevronUp, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUiStore } from "@/stores/ui-store";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 const models = [
@@ -30,15 +30,20 @@ const reasoningLevels = [
   { id: "ultra", label: "Ultra alto", pro: true },
 ] as const;
 
-type ModelId = (typeof models)[number]["id"];
-type ReasoningId = (typeof reasoningLevels)[number]["id"];
-
-export function ModelPicker() {
-  const [model, setModel] = useState<ModelId>("avancado");
-  const [reasoning, setReasoning] = useState<ReasoningId>("alto");
+export function ModelPicker({
+  side = "bottom",
+}: {
+  /** Where the menu opens: below on the home page, above in a chat thread. */
+  side?: "top" | "bottom";
+}) {
+  const model = useUiStore((s) => s.model);
+  const reasoning = useUiStore((s) => s.reasoning);
+  const setModel = useUiStore((s) => s.setModel);
+  const setReasoning = useUiStore((s) => s.setReasoning);
 
   const modelTitle = models.find((m) => m.id === model)?.title;
   const reasoningLabel = reasoningLevels.find((r) => r.id === reasoning)?.label;
+  const Chevron = side === "top" ? ChevronUp : ChevronDown;
 
   return (
     <Popover>
@@ -47,11 +52,11 @@ export function ModelPicker() {
         <span className="h-3.5 w-px bg-input" />
         <Brain className="size-3.5" />
         {reasoningLabel}
-        <ChevronUp className="size-3.5 text-ink-3" />
+        <Chevron className="size-3.5 text-ink-3" />
       </PopoverTrigger>
 
       <PopoverContent
-        side="bottom"
+        side={side}
         align="start"
         sideOffset={8}
         className="w-80 gap-0 rounded-xl p-1.5 shadow-[0_12px_32px_#1c1a1726] ring-border"

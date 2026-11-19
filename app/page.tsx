@@ -6,7 +6,8 @@ import {
   Send,
   Sparkles,
 } from "lucide-react";
-import { HomeComposer } from "@/components/home-composer";
+import { AuthGuard } from "@/components/auth-guard";
+import { Composer } from "@/components/composer";
 import { Sidebar } from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +30,14 @@ const suggestions = [
 ];
 
 export default function Home() {
+  return (
+    <AuthGuard>
+      <HomeContent />
+    </AuthGuard>
+  );
+}
+
+function HomeContent() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background">
       <Sidebar />
@@ -59,7 +68,7 @@ export default function Home() {
               </p>
             </div>
 
-            <HomeComposer />
+            <Composer />
 
             <ul className="flex flex-col">
               {suggestions.map(({ icon: Icon, title, detail }, i) => (

@@ -9,8 +9,10 @@ import {
   Settings,
   Sparkles,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -32,14 +34,19 @@ function AccountMenuItem({
   label,
   aside,
   iconClassName,
+  onClick,
 }: {
   icon: LucideIcon;
   label: string;
   aside?: ReactNode;
   iconClassName?: string;
+  onClick?: () => void;
 }) {
   return (
-    <DropdownMenuItem className="h-9 cursor-pointer gap-2.5 rounded-lg px-2.5 text-sm text-foreground focus:bg-muted">
+    <DropdownMenuItem
+      onClick={onClick}
+      className="h-9 cursor-pointer gap-2.5 rounded-lg px-2.5 text-sm text-foreground focus:bg-muted"
+    >
       <Icon className={cn("size-4 text-ink-2!", iconClassName)} />
       <span className="flex-1 text-foreground!">{label}</span>
       {aside}
@@ -48,6 +55,14 @@ function AccountMenuItem({
 }
 
 export function AccountMenu({ compact = false }: { compact?: boolean }) {
+  const router = useRouter();
+  const clearHostId = useAuthStore((s) => s.clearHostId);
+
+  function signOut() {
+    clearHostId();
+    router.push("/login");
+  }
+
   return (
     <DropdownMenu>
       {compact ? (
@@ -126,7 +141,7 @@ export function AccountMenu({ compact = false }: { compact?: boolean }) {
         <DropdownMenuSeparator className="mx-1 my-1" />
 
         <AccountMenuItem icon={LifeBuoy} label="Central de ajuda" />
-        <AccountMenuItem icon={LogOut} label="Sair" />
+        <AccountMenuItem icon={LogOut} label="Sair" onClick={signOut} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

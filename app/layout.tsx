@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Geist, Geist_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
+import { StoreHydration } from "@/components/store-hydration";
 import { cn } from "@/lib/utils";
 
 const geistSans = Geist({
@@ -44,7 +45,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         "font-sans",
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <StoreHydration />
+        {children}
+      </body>
     </html>
   );
 }

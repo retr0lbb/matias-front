@@ -10,7 +10,11 @@ import {
   SquarePen,
   Wrench,
 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
+import { MOCK_CHAT_TITLE } from "@/lib/chat/mock-conversation";
+import { useUiStore } from "@/stores/ui-store";
 import { AccountMenu } from "./account-menu";
 import { ChatSideBarItems } from "./chat-sidebar-items";
 import { Button } from "./ui/button";
@@ -67,7 +71,8 @@ const railItems: { label: string; icon: LucideIcon }[] = [
 ];
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const collapsed = useUiStore((s) => s.sidebarCollapsed);
+  const setCollapsed = useUiStore((s) => s.setSidebarCollapsed);
 
   if (collapsed) {
     return <SidebarRail onExpand={() => setCollapsed(false)} />;
@@ -124,6 +129,8 @@ function SidebarRail({ onExpand }: { onExpand: () => void }) {
 }
 
 function SidebarPanel({ onCollapse }: { onCollapse: () => void }) {
+  const pathname = usePathname();
+
   return (
     <nav className="flex h-screen w-72 shrink-0 flex-col gap-1 border-r border-sidebar-border bg-sidebar px-3 py-3.5 text-sidebar-foreground">
       <header className="flex items-center justify-between px-1">
@@ -154,7 +161,11 @@ function SidebarPanel({ onCollapse }: { onCollapse: () => void }) {
         <p className="font-serif text-sm italic text-ink-2">AI Educacional</p>
       </div>
 
-      <Button className="h-10 justify-between rounded-[10px] pr-3 pl-3.5 font-medium">
+      <Button
+        nativeButton={false}
+        render={<Link href="/" />}
+        className="h-10 justify-between rounded-[10px] pr-3 pl-3.5 font-medium"
+      >
         <span className="flex items-center gap-2.5">
           <SquarePen />
           Nova conversa
@@ -189,11 +200,11 @@ function SidebarPanel({ onCollapse }: { onCollapse: () => void }) {
               >
                 {group.label}
               </p>
-              {group.items.map((title, i) => (
+              {group.items.map((title) => (
                 <ChatSideBarItems
                   key={title}
                   text={title}
-                  isSelected={groupIndex === 0 && i === 0}
+                  isSelected={pathname === "/chat" && title === MOCK_CHAT_TITLE}
                 />
               ))}
             </div>

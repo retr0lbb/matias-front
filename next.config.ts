@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   experimental: {
     agentUpgrade: "security",
   },
+  images: {
+    // Object form (not `new URL`) so Unsplash query params like ?w=1600 are allowed.
+    remotePatterns: [
+      { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
+    ],
+  },
   turbopack: {
     rules: {
       "*.css": {

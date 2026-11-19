@@ -1,8 +1,10 @@
 import { Ellipsis } from "lucide-react";
+import Link from "next/link";
 import { tv } from "tailwind-variants";
 
 interface ChatSideBarItemsProps {
   text: string;
+  href?: string;
   isSelected?: boolean;
   className?: string;
 }
@@ -20,8 +22,9 @@ const chatSidebarVariants = tv({
 
 export function ChatSideBarItems(props: ChatSideBarItemsProps) {
   return (
-    <button
-      type="button"
+    <Link
+      href={props.href ?? "/chat"}
+      aria-current={props.isSelected ? "page" : undefined}
       className={chatSidebarVariants({
         className: props.className,
         selected: props.isSelected,
@@ -29,6 +32,6 @@ export function ChatSideBarItems(props: ChatSideBarItemsProps) {
     >
       <span className="truncate">{props.text}</span>
       <Ellipsis className="size-4 shrink-0 text-ink-3 opacity-0 transition-opacity group-hover:opacity-100" />
-    </button>
+    </Link>
   );
 }
