@@ -1,123 +1,93 @@
-import { ChatInput } from "@/components/chat-input";
-import { ChatSideBarItems } from "@/components/chat-sidebar-items";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Book,
-  ChevronDown,
-  ChevronsUpDown,
-  MessageCircleDashed,
-  PanelLeft,
-  Ruler,
-  Search,
+  ArrowRight,
+  ClipboardCheck,
+  GraduationCap,
+  NotebookPen,
+  Send,
+  Sparkles,
 } from "lucide-react";
+import { HomeComposer } from "@/components/home-composer";
+import { Sidebar } from "@/components/sidebar";
+import { Button } from "@/components/ui/button";
+
+const suggestions = [
+  {
+    icon: ClipboardCheck,
+    title: "Criar uma prova a partir da ementa",
+    detail: "Questões objetivas e discursivas com gabarito",
+  },
+  {
+    icon: NotebookPen,
+    title: "Montar um plano de aula de 50 minutos",
+    detail: "Objetivos, sequência, materiais e avaliação",
+  },
+  {
+    icon: Send,
+    title: "Publicar uma atividade no Classroom",
+    detail: "Escolha a turma, o prazo e revise antes de enviar",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="w-screen h-screen flex items-center justify-center gap-2">
-      <nav
-        className="h-screen w-1/3 overflow-hidden bg-zinc-100 border-r border-zinc-950/20 rounded-tr-lg 
-        rounded-br-lg flex flex-col"
-      >
-        <header className="w-full flex items-center justify-between px-2 py-2.5">
-          <PanelLeft
-            className="cursor-pointer text-zinc-400 
-          hover:text-zinc-800 transition-all"
-            strokeWidth={1}
-          />
-          <Search
-            className="cursor-pointer text-zinc-400 
-          hover:text-zinc-800 transition-all"
-            strokeWidth={1.2}
-            size={24}
-          />
+    <div className="flex h-screen w-screen overflow-hidden bg-background">
+      <Sidebar />
+
+      <main className="flex min-w-0 flex-1 flex-col px-5 pt-3.5 pb-5">
+        <header className="flex h-9 items-center justify-end gap-2">
+          <Button
+            variant="outline"
+            className="h-8 gap-2 rounded-lg bg-card px-3 text-[13px]"
+          >
+            <Sparkles className="size-3.75 text-brand" />
+            Conhecer o Pro
+          </Button>
+          <div className="flex h-8 items-center gap-2 rounded-full border bg-surface pr-3 pl-2.5 text-[13px] text-ink-2">
+            <GraduationCap className="size-3.75" />6 turmas sincronizadas
+            <span className="size-1.75 rounded-full bg-success" />
+          </div>
         </header>
 
-        <div className="space-y-0.5 mb-4">
-          <h1 className="text-4xl font-black w-full text-center text-zinc-800 italic">
-            MAT<strong className="text-rose-600">IA</strong>S
-          </h1>
-          <p className="w-full text-center text-xs text-zinc-700">
-            AI Educacional
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-2 my-2.5 px-2">
-          <Button variant={"default"} size={"sm"} className={"rounded-full"}>
-            <MessageCircleDashed />
-            Nova Conversa
-          </Button>
-          <Button
-            variant={"ghost"}
-            size={"sm"}
-            className={
-              "rounded-full flex items-center justify-start font-normal"
-            }
-          >
-            <Ruler strokeWidth={1} />
-            Ferramentas
-          </Button>{" "}
-          <Button
-            variant={"ghost"}
-            size={"sm"}
-            className={
-              "rounded-full flex items-center justify-start font-normal"
-            }
-          >
-            <Book />
-            Modelos
-          </Button>
-        </div>
-
-        <div className="w-7/8 m-auto rounded-full h-px bg-zinc-950/10"></div>
-
-        {/** CONVERSATION_SECTION */}
-        <Collapsible
-          defaultOpen={true}
-          className="flex min-h-0 flex-1 flex-col py-1 px-2 items-start mt-4"
-        >
-          <CollapsibleTrigger className="group flex shrink-0 items-center justify-center gap-0.5 text-sm cursor-pointer">
-            Minhas Conversas
-            <ChevronDown className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-          </CollapsibleTrigger>
-
-          <CollapsibleContent className="w-full min-h-0 flex-1">
-            <ScrollArea className="h-full w-full mt-2 px-2">
-              <div className="flex flex-col gap-1.5">
-                <ChatSideBarItems
-                  text="O que significa Farmar Aura"
-                  isSelected
-                />
-                <ChatSideBarItems text="A correlação entre o Iluminismo e a queda do muro de Berlim em 1940" />
-                <ChatSideBarItems text="Ideias de aula GenZ Com Aura" />
-                <ChatSideBarItems text="Atividade Avaliativa Historia 2026 tema Guerra Fria" />
-                <ChatSideBarItems text="Jogos Matematicos e Estatisticos para 6 ano" />
-              </div>
-            </ScrollArea>
-          </CollapsibleContent>
-        </Collapsible>
-
-        <div className="w-full flex items-center justify-center pb-4 pt-2 px-2">
-          <div className="flex items-center gap-3 justify-center bg-zinc-950/5 py-2 px-6 rounded-full border border-zinc-950/20">
-            <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-              <AvatarFallback> U </AvatarFallback>
-            </Avatar>
-            <div className="flex items-center flex-col justify-center">
-              <p className="text-sm text-zinc-900">Henrique Barbosa</p>
-              <p className="text-xs text-zinc-700">retr0lbb@gmail.com</p>
+        <section className="flex flex-1 flex-col items-center justify-center overflow-y-auto pb-10">
+          <div className="flex w-full max-w-180 flex-col gap-7">
+            <div className="flex flex-col gap-2 px-1">
+              <h2 className="font-serif text-[44px] leading-[1.1] tracking-[-0.02em]">
+                Boa tarde, Henrique.
+              </h2>
+              <p className="font-serif text-xl italic text-ink-2">
+                O que vamos preparar para as suas turmas hoje?
+              </p>
             </div>
 
-            <ChevronsUpDown className="text-zinc-400" />
+            <HomeComposer />
+
+            <ul className="flex flex-col">
+              {suggestions.map(({ icon: Icon, title, detail }, i) => (
+                <li key={title}>
+                  <button
+                    type="button"
+                    className={`group flex w-full cursor-pointer items-center gap-3.5 border-b px-3 py-3.25 text-left transition-colors hover:bg-muted/60 ${i === 0 ? "border-t" : ""}`}
+                  >
+                    <Icon className="size-4.5 shrink-0 text-ink-2" />
+                    <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                      <span className="text-sm font-medium">{title}</span>
+                      <span className="truncate text-[13px] text-ink-3">
+                        {detail}
+                      </span>
+                    </span>
+                    <ArrowRight className="size-4 shrink-0 text-ink-3 transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      </nav>
+        </section>
+
+        <footer className="text-center text-xs text-ink-3">
+          O MATIAS pode errar. Revise o material antes de publicar para seus
+          alunos.
+        </footer>
+      </main>
     </div>
   );
 }
