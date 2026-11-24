@@ -18,11 +18,14 @@ export function toChatMessage(message: ApiChatMessage): ChatMessage {
 
   const blocks: AnswerBlock[] = [];
   if (message.text.trim()) {
-    blocks.push({ type: "paragraph", text: message.text });
+    blocks.push({ type: "markdown", text: message.text });
   }
   for (const doc of message.documents ?? []) {
     blocks.push({
       type: "document",
+      id: doc.id,
+      documentType: doc.documentType,
+      version: doc.version,
       title: doc.title,
       detail: documentDetail(doc),
     });
@@ -43,6 +46,9 @@ export function toChatMessage(message: ApiChatMessage): ChatMessage {
     role: "assistant",
     thinking: message.thinking?.trim()
       ? { steps: [{ text: message.thinking }] }
+      : undefined,
+    tools: message.tools?.length
+      ? message.tools.map(({ name, ok }) => ({ name, ok }))
       : undefined,
     blocks,
   };

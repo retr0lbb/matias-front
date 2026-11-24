@@ -1,6 +1,7 @@
 import { GitCompare, Info } from "lucide-react";
 import type { AnswerBlock as AnswerBlockType } from "@/lib/chat/types";
 import { DocumentCard } from "./document-card";
+import { Markdown } from "./markdown";
 
 export function NumberedList({
   items,
@@ -43,14 +44,20 @@ export function AnswerBlock({ block }: { block: AnswerBlockType }) {
           {block.text}
         </p>
       );
+    case "markdown":
+      return <Markdown text={block.text} />;
     case "numbered-list":
       return <NumberedList items={block.items} />;
     case "document":
       return (
         <DocumentCard
-          title={block.title}
+          document={{
+            id: block.id,
+            title: block.title,
+            documentType: block.documentType,
+            version: block.version,
+          }}
           detail={block.detail}
-          open={block.open}
         />
       );
     case "change-summary":
@@ -71,6 +78,7 @@ export function blocksToText(blocks: AnswerBlockType[]) {
     .map((b) => {
       switch (b.type) {
         case "paragraph":
+        case "markdown":
         case "notice":
           return b.text;
         case "numbered-list":

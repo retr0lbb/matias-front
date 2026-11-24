@@ -3,6 +3,7 @@ import { Message, MessageContent } from "../ui/message";
 import { AnswerBlock, blocksToText } from "./answer-blocks";
 import { MessageActions } from "./message-actions";
 import { ThinkingDetailed } from "./thinking-detailed";
+import { ToolTrace } from "./tool-trace";
 
 export function AssistantMessage({
   message,
@@ -22,6 +23,14 @@ export function AssistantMessage({
             thinking={message.thinking}
             // Finished replies keep the reasoning folded (it was shown live).
             defaultOpen={false}
+          />
+        )}
+        {message.tools && (
+          <ToolTrace
+            tools={message.tools.map(({ name, ok }) => ({
+              name,
+              status: ok ? "done" : "error",
+            }))}
           />
         )}
         <div className="flex flex-col gap-2.5">

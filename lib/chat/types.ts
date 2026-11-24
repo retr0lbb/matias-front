@@ -1,3 +1,5 @@
+import type { DocumentType } from "@/lib/api/conversations";
+
 export type ChatAttachment = {
   name: string;
   /** e.g. "PDF · 24 páginas" */
@@ -18,11 +20,20 @@ export type DetailedThinking = {
 
 export type AnswerBlock =
   | { type: "paragraph"; text: string }
+  /** Assistant reply text, written in Markdown (GFM). */
+  | { type: "markdown"; text: string }
   | {
       type: "numbered-list";
       items: { title: string; detail: string }[];
     }
-  | { type: "document"; title: string; detail: string; open?: boolean }
+  | {
+      type: "document";
+      id: string;
+      documentType: DocumentType;
+      version: number;
+      title: string;
+      detail: string;
+    }
   | { type: "change-summary"; label: string }
   | { type: "notice"; text: string };
 
@@ -33,10 +44,14 @@ export type UserMessage = {
   attachments?: ChatAttachment[];
 };
 
+/** A Classroom tool the assistant called while answering. */
+export type ToolCall = { name: string; ok: boolean };
+
 export type AssistantMessage = {
   id: string;
   role: "assistant";
   thinking?: DetailedThinking;
+  tools?: ToolCall[];
   blocks: AnswerBlock[];
 };
 

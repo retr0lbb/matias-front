@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
 import { UNTITLED_CONVERSATION } from "@/lib/api/conversations";
 import { NEW_CHAT_ID, useChatStore } from "@/stores/chat-store";
 import { useConversationsStore } from "@/stores/conversations-store";
+import { useDocumentPanelStore } from "@/stores/document-panel-store";
 import { Composer } from "../composer";
+import { DocumentSplit } from "../document-panel/document-split";
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -41,9 +44,28 @@ export function ChatView({ conversationId }: { conversationId: string }) {
       : null;
   const title = listTitle ?? threadTitle ?? UNTITLED_CONVERSATION;
 
+  // A document the reply just made (or revised) opens beside the chat on
+  // large screens; an already open one picks up the new version.
+  const latestDocument = liveHere?.documents.at(-1);
+  useEffect(() => {
+    if (!latestDocument) return;
+    const panel = useDocumentPanelStore.getState();
+    if (panel.document?.id === latestDocument.id) {
+      panel.refresh(latestDocument);
+    } else if (window.matchMedia("(min-width: 1024px)").matches) {
+      panel.open(latestDocument);
+    }
+  }, [latestDocument]);
+
   return (
-    <div className="flex h-full min-w-0 flex-1 flex-col">
-      <ChatHeader title={title} />
+    <DocumentSplit>
+      <ChatHeader
+        title={title}
+        // A new chat has no id until the stream's `start`; nothing to rename.
+        conversationId={
+          conversationId === NEW_CHAT_ID ? undefined : conversationId
+        }
+      />
 
       <MessageScrollerProvider autoScroll defaultScrollPosition="end">
         <MessageScroller className="flex-1">
@@ -94,6 +116,6 @@ export function ChatView({ conversationId }: { conversationId: string }) {
         O MATIAS pode errar. Revise o material antes de publicar para seus
         alunos.
       </p>
-    </div>
+    </DocumentSplit>
   );
 }

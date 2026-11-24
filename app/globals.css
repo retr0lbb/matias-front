@@ -159,3 +159,42 @@
     transform: translateX(300%);
   }
 }
+
+/* Typing cursor at the end of a streaming Markdown reply. It sits after the
+   last text-bearing element, so it follows the text into lists and quotes. */
+.markdown[data-streaming] > :is(p, h1, h2, h3, h4, h5, h6):last-child::after,
+.markdown[data-streaming] > :is(ul, ol):last-child > li:last-child::after,
+.markdown[data-streaming] > blockquote:last-child > p:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  translate: 0 0.15em;
+  border-radius: 9999px;
+  background: var(--brand);
+  animation: md-cursor 1s ease-in-out infinite;
+}
+
+@keyframes md-cursor {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .markdown[data-streaming] *::after {
+    animation: none;
+  }
+}
+
+/* Math (KaTeX) in replies: wide formulas scroll instead of overflowing. */
+.markdown .katex {
+  font-size: 1.08em;
+}
+.markdown .katex-display {
+  margin: 0.75rem 0;
+  padding: 0.25rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}

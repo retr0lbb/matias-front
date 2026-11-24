@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Brain,
-  Check,
-  FilePenLine,
-  GraduationCap,
-  Info,
-  X,
-} from "lucide-react";
+import { Brain, FilePenLine, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRevealedText } from "@/hooks/use-revealed-text";
 import {
@@ -16,11 +9,7 @@ import {
   documentingLabel,
   TIER_LABELS,
 } from "@/lib/chat/labels";
-import {
-  type LiveReply,
-  type LiveTool,
-  useChatStore,
-} from "@/stores/chat-store";
+import { type LiveReply, useChatStore } from "@/stores/chat-store";
 import {
   Attachment,
   AttachmentContent,
@@ -34,13 +23,14 @@ import {
   TraceCollapsible,
   TraceCollapsibleContent,
   TraceCollapsibleTrigger,
-  TraceDescription,
   TraceIcon,
   TraceLine,
   TraceTitle,
 } from "../ui/trace";
 import { DocumentCard } from "./document-card";
+import { Markdown } from "./markdown";
 import { ThinkingSimple } from "./thinking-simple";
+import { ToolTrace } from "./tool-trace";
 
 /** Entrance used by every piece that appears mid-reply. */
 const appear =
@@ -101,15 +91,7 @@ export function LiveAssistantMessage({ live }: { live: LiveReply }) {
 
         {thinking && <LiveThinking live={live} />}
 
-        {live.tools.length > 0 && (
-          <Trace className={appear}>
-            {live.tools.map((tool, i) => (
-              // Calls only get appended, so the index is stable.
-              // biome-ignore lint/suspicious/noArrayIndexKey: append-only list
-              <ToolLine key={i} tool={tool} />
-            ))}
-          </Trace>
-        )}
+        <ToolTrace tools={live.tools} className={appear} />
 
         {model?.downgradedFrom && (
           <ModelNotice>
@@ -126,22 +108,17 @@ export function LiveAssistantMessage({ live }: { live: LiveReply }) {
         {(writing || live.documents.length > 0 || live.documenting) && (
           <div className="flex flex-col gap-2.5">
             {writing && (
-              <p className="text-[15px] leading-[1.6] whitespace-pre-wrap">
-                {revealed.text}
-                {!(live.ending && revealed.caughtUp) && (
-                  <span
-                    aria-hidden="true"
-                    className="ml-0.5 inline-block h-[1.05em] w-0.5 translate-y-[0.15em] animate-pulse rounded-full bg-brand motion-reduce:animate-none"
-                  />
-                )}
-              </p>
+              <Markdown
+                text={revealed.text}
+                streaming={!(live.ending && revealed.caughtUp)}
+              />
             )}
             {live.documents.map((doc) => (
               <div
                 key={doc.id}
                 className="animate-in fade-in-0 zoom-in-95 duration-300 motion-reduce:animate-none"
               >
-                <DocumentCard title={doc.title} detail={documentDetail(doc)} />
+                <DocumentCard document={doc} detail={documentDetail(doc)} />
               </div>
             ))}
             {live.documenting && <DocumentSkeleton live={live} />}
@@ -197,39 +174,6 @@ function LiveThinking({ live }: { live: LiveReply }) {
         </TraceCollapsibleContent>
       </TraceCollapsible>
     </Trace>
-  );
-}
-
-function ToolLine({ tool }: { tool: LiveTool }) {
-  const running = tool.status === "running";
-  return (
-    <TraceLine
-      status={
-        running ? "running" : tool.status === "error" ? "error" : undefined
-      }
-      className={`text-[13px] ${appear}`}
-    >
-      <TraceIcon>
-        {running ? (
-          <span className="size-3.5 animate-spin rounded-full border-2 border-border border-t-brand motion-reduce:animate-none" />
-        ) : tool.status === "error" ? (
-          <X className="size-3.75" />
-        ) : (
-          <Check className="size-3.75 text-success" />
-        )}
-      </TraceIcon>
-      <GraduationCap className="size-3.75 shrink-0" aria-hidden="true" />
-      <TraceTitle className="font-medium">
-        {running
-          ? "Usando o Google Classroom…"
-          : tool.status === "error"
-            ? "Falha no Google Classroom"
-            : "Google Classroom"}
-      </TraceTitle>
-      <TraceDescription className="font-mono text-[11px]">
-        {tool.name}
-      </TraceDescription>
-    </TraceLine>
   );
 }
 

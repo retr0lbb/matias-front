@@ -77,6 +77,8 @@ type ChatState = {
   /** Id the backend gave the last new chat (`start`), to update the URL. */
   startedConversationId: string | null;
   setThread: (conversationId: string, thread: Thread) => void;
+  setThreadTitle: (conversationId: string, title: string | null) => void;
+  removeThread: (conversationId: string) => void;
   /** Clears the NEW_CHAT_ID thread, before the first message of a new chat. */
   beginNewChat: () => void;
   send: (input: SendInput) => Promise<void>;
@@ -125,10 +127,13 @@ function finalize(
   notice?: string,
 ): AssistantMessage {
   const blocks: AnswerBlock[] = [];
-  if (live.text.trim()) blocks.push({ type: "paragraph", text: live.text });
+  if (live.text.trim()) blocks.push({ type: "markdown", text: live.text });
   for (const doc of live.documents) {
     blocks.push({
       type: "document",
+      id: doc.id,
+      documentType: doc.documentType,
+      version: doc.version,
       title: doc.title,
       detail: documentDetail(doc),
     });
@@ -151,6 +156,10 @@ function finalize(
           ),
           steps: [{ text: live.thinking }],
         }
+      : undefined,
+    // A call still "running" when the stream ended never finished.
+    tools: live.tools.length
+      ? live.tools.map(({ name, status }) => ({ name, ok: status === "done" }))
       : undefined,
     blocks,
   };
@@ -263,6 +272,22 @@ export const useChatStore = create<ChatState>()((set, get) => {
       set((state) => ({
         threads: { ...state.threads, [conversationId]: thread },
       })),
+
+    setThreadTitle: (conversationId, title) =>
+      set((state) => {
+        const thread = state.threads[conversationId];
+        if (!thread) return state;
+        return {
+          threads: { ...state.threads, [conversationId]: { ...thread, title } },
+        };
+      }),
+
+    removeThread: (conversationId) =>
+      set((state) => {
+        if (!(conversationId in state.threads)) return state;
+        const { [conversationId]: _, ...threads } = state.threads;
+        return { threads };
+      }),
 
     beginNewChat: () =>
       set((state) => ({

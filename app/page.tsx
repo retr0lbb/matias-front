@@ -6,6 +6,7 @@ import {
   Send,
   Sparkles,
 } from "lucide-react";
+import Link from "next/link";
 import { AuthGuard } from "@/components/auth-guard";
 import { Greeting } from "@/components/greeting";
 import { HomeComposer } from "@/components/home-composer";
@@ -47,6 +48,8 @@ function HomeContent() {
         <header className="flex h-9 items-center justify-end gap-2">
           <Button
             variant="outline"
+            nativeButton={false}
+            render={<Link href="/plans" />}
             className="h-8 gap-2 rounded-lg bg-card px-3 text-[13px]"
           >
             <Sparkles className="size-3.75 text-brand" />

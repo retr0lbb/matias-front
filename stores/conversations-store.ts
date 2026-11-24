@@ -2,6 +2,15 @@ import { create } from "zustand";
 import { type Conversation, listConversations } from "@/lib/api/conversations";
 import { useAuthStore } from "./auth-store";
 
+/** Where a chat is being renamed: its sidebar row or the chat header. */
+export type RenameTarget = {
+  id: string;
+  from: "sidebar" | "header";
+  /** Set when the last attempt failed; the field reopens with `draft`. */
+  error?: string;
+  draft?: string;
+};
+
 type ConversationsState = {
   conversations: Conversation[];
   status: "idle" | "loading" | "ready" | "error";
@@ -16,6 +25,16 @@ type ConversationsState = {
   load: (force?: boolean) => Promise<void>;
   loadMore: () => Promise<void>;
   reset: () => void;
+
+  /** The chat whose title is being edited inline, if any. */
+  renaming: RenameTarget | null;
+  setRenaming: (renaming: RenameTarget | null) => void;
+  /** The chat waiting for delete confirmation, if any. */
+  deletingId: string | null;
+  setDeletingId: (id: string | null) => void;
+  /** Local list updates; the API calls live in lib/chat/conversation-actions. */
+  setTitle: (id: string, title: string | null) => void;
+  removeLocal: (id: string) => void;
 };
 
 const initialState = {
@@ -24,6 +43,8 @@ const initialState = {
   nextCursor: null,
   loadingMore: false,
   loadMoreFailed: false,
+  renaming: null,
+  deletingId: null,
 } satisfies Partial<ConversationsState>;
 
 // Bumped on reset/force so answers to stale requests are dropped.
@@ -82,6 +103,19 @@ export const useConversationsStore = create<ConversationsState>()(
       generation++;
       set(initialState);
     },
+
+    setRenaming: (renaming) => set({ renaming }),
+    setDeletingId: (deletingId) => set({ deletingId }),
+    setTitle: (id, title) =>
+      set((state) => ({
+        conversations: state.conversations.map((c) =>
+          c.id === id ? { ...c, title } : c,
+        ),
+      })),
+    removeLocal: (id) =>
+      set((state) => ({
+        conversations: state.conversations.filter((c) => c.id !== id),
+      })),
   }),
 );
 

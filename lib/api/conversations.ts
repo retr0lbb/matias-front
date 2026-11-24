@@ -86,3 +86,22 @@ export type ConversationDetail = Conversation & { messages: ApiChatMessage[] };
 export function getConversation(id: string) {
   return apiFetch<ConversationDetail>(`/ai/chat/${encodeURIComponent(id)}`);
 }
+
+/** Renames a chat. Doesn't bump `updatedAt`, so its place in the list stays. */
+export function renameConversation(id: string, title: string) {
+  return apiFetch(`/ai/chat/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: { title },
+  });
+}
+
+/** Deletes a chat (204), optionally with the documents it generated. */
+export function deleteConversation(
+  id: string,
+  { deleteDocuments = false }: { deleteDocuments?: boolean } = {},
+) {
+  const query = deleteDocuments ? "?deleteDocuments=true" : "";
+  return apiFetch(`/ai/chat/${encodeURIComponent(id)}${query}`, {
+    method: "DELETE",
+  });
+}

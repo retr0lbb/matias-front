@@ -11,13 +11,16 @@ import {
   Wrench,
 } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { useRefreshUser } from "@/hooks/use-refresh-user";
+import { useClassroomStore } from "@/stores/classroom-store";
 import { useUiStore } from "@/stores/ui-store";
 import { AccountMenu } from "./account-menu";
 import { ConversationList } from "./conversation-list";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
+
+const CLASSROOM_HREF = "/settings#classroom";
 
 const navItems: { label: string; icon: LucideIcon; trailing?: ReactNode }[] = [
   { label: "Ferramentas", icon: Wrench },
@@ -27,24 +30,76 @@ const navItems: { label: string; icon: LucideIcon; trailing?: ReactNode }[] = [
     icon: FolderOpen,
     trailing: <span className="text-xs text-ink-3">38</span>,
   },
-  {
-    label: "Google Classroom",
-    icon: GraduationCap,
-    trailing: (
-      <span className="flex items-center gap-1.5 text-xs text-ink-3">
-        <span className="size-1.75 rounded-full bg-success" />
-        Conectado
-      </span>
-    ),
-  },
 ];
 
 const railItems: { label: string; icon: LucideIcon }[] = [
   { label: "Nova conversa", icon: SquarePen },
   { label: "Buscar conversas", icon: Search },
   { label: "Meus arquivos", icon: FolderOpen },
-  { label: "Google Classroom", icon: GraduationCap },
 ];
+
+/** Loads the Classroom connection once per user for the sidebar status. */
+function useClassroomStatus() {
+  const status = useClassroomStore((s) => s.status);
+  const loading = useClassroomStore((s) => s.loading);
+  const load = useClassroomStore((s) => s.load);
+  useEffect(() => {
+    if (loading === "idle") load();
+  }, [loading, load]);
+  return status;
+}
+
+function ClassroomNavItem() {
+  const status = useClassroomStatus();
+  return (
+    <Button
+      variant="ghost"
+      nativeButton={false}
+      render={<Link href={CLASSROOM_HREF} />}
+      className="h-9 justify-between rounded-lg px-2.5 font-normal hover:bg-accent"
+    >
+      <span className="flex items-center gap-2.5">
+        <GraduationCap className="size-4.25 text-ink-2" />
+        Google Classroom
+      </span>
+      {status && (
+        <span className="flex items-center gap-1.5 text-xs text-ink-3">
+          <span
+            className={
+              status.connected
+                ? "size-1.75 rounded-full bg-success"
+                : "size-1.75 rounded-full bg-ink-3/50"
+            }
+          />
+          {status.connected ? "Conectado" : "Desconectado"}
+        </span>
+      )}
+    </Button>
+  );
+}
+
+function ClassroomRailButton() {
+  const status = useClassroomStatus();
+  const label = status
+    ? `Google Classroom (${status.connected ? "conectado" : "desconectado"})`
+    : "Google Classroom";
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      aria-label={label}
+      title={label}
+      nativeButton={false}
+      render={<Link href={CLASSROOM_HREF} />}
+      className="relative rounded-lg text-ink-2 hover:bg-accent"
+    >
+      <GraduationCap className="size-4.5" />
+      {status?.connected && (
+        <span className="absolute right-1.5 bottom-1.5 size-1.75 rounded-full bg-success ring-2 ring-sidebar" />
+      )}
+    </Button>
+  );
+}
 
 export function Sidebar() {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
@@ -99,6 +154,7 @@ function SidebarRail({ onExpand }: { onExpand: () => void }) {
       {railItems.map((item) => (
         <RailButton key={item.label} {...item} />
       ))}
+      <ClassroomRailButton />
       <div className="flex-1" />
       <AccountMenu compact />
     </nav>
@@ -164,6 +220,7 @@ function SidebarPanel({ onCollapse }: { onCollapse: () => void }) {
             {trailing}
           </Button>
         ))}
+        <ClassroomNavItem />
       </div>
 
       <ScrollArea className="mt-3.5 min-h-0 flex-1">

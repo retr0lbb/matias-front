@@ -72,6 +72,7 @@ export function ConversationList() {
         return (
           <ChatSideBarItems
             key={conversation.id}
+            id={conversation.id}
             href={href}
             text={conversation.title ?? UNTITLED_CONVERSATION}
             isSelected={pathname === href}

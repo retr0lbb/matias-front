@@ -14,7 +14,13 @@ type UiState = {
   reasoning: ReasoningId;
   setModel: (model: ModelId) => void;
   setReasoning: (reasoning: ReasoningId) => void;
+
+  /** Width of the document side panel, in px (clamped by the layout). */
+  documentPanelWidth: number;
+  setDocumentPanelWidth: (width: number) => void;
 };
+
+export const DEFAULT_DOCUMENT_PANEL_WIDTH = 560;
 
 export const useUiStore = create<UiState>()(
   persist(
@@ -28,6 +34,10 @@ export const useUiStore = create<UiState>()(
       reasoning: "alto",
       setModel: (model) => set({ model }),
       setReasoning: (reasoning) => set({ reasoning }),
+
+      documentPanelWidth: DEFAULT_DOCUMENT_PANEL_WIDTH,
+      setDocumentPanelWidth: (documentPanelWidth) =>
+        set({ documentPanelWidth }),
     }),
     {
       name: "matias-ui",
@@ -36,6 +46,7 @@ export const useUiStore = create<UiState>()(
         sidebarCollapsed: state.sidebarCollapsed,
         model: state.model,
         reasoning: state.reasoning,
+        documentPanelWidth: state.documentPanelWidth,
       }),
       // Rehydrated on the client by <StoreHydration /> to avoid SSR mismatches.
       skipHydration: true,
