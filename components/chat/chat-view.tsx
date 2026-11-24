@@ -102,11 +102,16 @@ export function ChatView({ conversationId }: { conversationId: string }) {
           placeholder="Responda ou peça outra coisa…"
           // One reply at a time, even if it belongs to another chat.
           isGenerating={Boolean(live)}
-          onSend={(prompt) =>
+          conversationId={
+            conversationId === NEW_CHAT_ID ? null : conversationId
+          }
+          onSend={({ text, attachments, newConversationId }) =>
             send({
-              prompt,
+              prompt: text,
               conversationId:
                 conversationId === NEW_CHAT_ID ? null : conversationId,
+              attachments,
+              newConversationId,
             })
           }
           onStop={stop}

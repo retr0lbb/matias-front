@@ -12,6 +12,7 @@ import { MODEL_TO_API, REASONING_TO_API } from "@/lib/chat/model-options";
 import type {
   AnswerBlock,
   AssistantMessage,
+  ChatAttachment,
   ChatMessage,
   UserMessage,
 } from "@/lib/chat/types";
@@ -68,6 +69,13 @@ type SendInput = {
   prompt: string;
   /** `null` starts a new chat (kept under NEW_CHAT_ID until `start`). */
   conversationId: string | null;
+  /** Shown on the user message (the files were uploaded beforehand). */
+  attachments?: ChatAttachment[];
+  /**
+   * For a new chat: the id to create it with, because files were already
+   * uploaded into it. The backend creates the conversation with this id.
+   */
+  newConversationId?: string | null;
 };
 
 type ChatState = {
@@ -298,13 +306,19 @@ export const useChatStore = create<ChatState>()((set, get) => {
         },
       })),
 
-    send: async ({ prompt, conversationId }) => {
+    send: async ({
+      prompt,
+      conversationId,
+      attachments,
+      newConversationId,
+    }) => {
       if (get().live) return;
       const { model, reasoning } = useUiStore.getState();
       const userMessage: UserMessage = {
         id: localId("user"),
         role: "user",
         text: prompt,
+        attachments: attachments?.length ? attachments : undefined,
       };
 
       append(conversationId ?? NEW_CHAT_ID, userMessage);
@@ -350,7 +364,7 @@ export const useChatStore = create<ChatState>()((set, get) => {
       try {
         await streamChat({
           prompt,
-          conversationId,
+          conversationId: conversationId ?? newConversationId ?? null,
           model: MODEL_TO_API[model] ?? "AUTO",
           thinkingLevel: REASONING_TO_API[reasoning] ?? "DEFAULT",
           signal,

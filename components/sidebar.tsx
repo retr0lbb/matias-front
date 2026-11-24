@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  FolderOpen,
   GraduationCap,
-  LayoutTemplate,
   type LucideIcon,
   PanelLeft,
   Search,
@@ -22,20 +20,17 @@ import { ScrollArea } from "./ui/scroll-area";
 
 const CLASSROOM_HREF = "/settings#classroom";
 
-const navItems: { label: string; icon: LucideIcon; trailing?: ReactNode }[] = [
-  { label: "Ferramentas", icon: Wrench },
-  { label: "Modelos", icon: LayoutTemplate },
-  {
-    label: "Meus arquivos",
-    icon: FolderOpen,
-    trailing: <span className="text-xs text-ink-3">38</span>,
-  },
-];
+const navItems: {
+  label: string;
+  icon: LucideIcon;
+  href?: string;
+  trailing?: ReactNode;
+}[] = [{ label: "Ferramentas", icon: Wrench, href: "/tools" }];
 
-const railItems: { label: string; icon: LucideIcon }[] = [
+const railItems: { label: string; icon: LucideIcon; href?: string }[] = [
   { label: "Nova conversa", icon: SquarePen },
   { label: "Buscar conversas", icon: Search },
-  { label: "Meus arquivos", icon: FolderOpen },
+  { label: "Ferramentas", icon: Wrench, href: "/tools" },
 ];
 
 /** Loads the Classroom connection once per user for the sidebar status. */
@@ -116,10 +111,12 @@ export function Sidebar() {
 function RailButton({
   label,
   icon: Icon,
+  href,
   onClick,
 }: {
   label: string;
   icon: LucideIcon;
+  href?: string;
   onClick?: () => void;
 }) {
   return (
@@ -129,6 +126,9 @@ function RailButton({
       aria-label={label}
       title={label}
       onClick={onClick}
+      {...(href
+        ? { nativeButton: false, render: <Link href={href} /> }
+        : undefined)}
       className="rounded-lg text-ink-2 hover:bg-accent"
     >
       <Icon className="size-4.5" />
@@ -207,10 +207,13 @@ function SidebarPanel({ onCollapse }: { onCollapse: () => void }) {
       </Button>
 
       <div className="flex flex-col gap-0.5 pt-2.5">
-        {navItems.map(({ label, icon: Icon, trailing }) => (
+        {navItems.map(({ label, icon: Icon, href, trailing }) => (
           <Button
             key={label}
             variant="ghost"
+            {...(href
+              ? { nativeButton: false, render: <Link href={href} /> }
+              : undefined)}
             className="h-9 justify-between rounded-lg px-2.5 font-normal hover:bg-accent"
           >
             <span className="flex items-center gap-2.5">

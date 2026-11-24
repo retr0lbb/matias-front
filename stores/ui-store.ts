@@ -18,6 +18,13 @@ type UiState = {
   /** Width of the document side panel, in px (clamped by the layout). */
   documentPanelWidth: number;
   setDocumentPanelWidth: (width: number) => void;
+
+  /**
+   * Text for the home composer to start with (e.g. a tool's example prompt).
+   * The composer takes it once; not persisted.
+   */
+  composerDraft: string | null;
+  setComposerDraft: (draft: string | null) => void;
 };
 
 export const DEFAULT_DOCUMENT_PANEL_WIDTH = 560;
@@ -38,6 +45,9 @@ export const useUiStore = create<UiState>()(
       documentPanelWidth: DEFAULT_DOCUMENT_PANEL_WIDTH,
       setDocumentPanelWidth: (documentPanelWidth) =>
         set({ documentPanelWidth }),
+
+      composerDraft: null,
+      setComposerDraft: (composerDraft) => set({ composerDraft }),
     }),
     {
       name: "matias-ui",

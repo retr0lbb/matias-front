@@ -16,6 +16,7 @@ import { anyLimitReached, planName, resetsInLabel } from "@/lib/usage-format";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { useUsageStore } from "@/stores/usage-store";
+import { HelpDialog } from "./help-dialog";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import {
   DropdownMenu,
@@ -65,6 +66,7 @@ export function AccountMenu({ compact = false }: { compact?: boolean }) {
   const usage = useUsageStore((s) => s.usage);
   const loadUsage = useUsageStore((s) => s.load);
   const [usageOpen, setUsageOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const user = {
     name: sessionUser?.name ?? "",
     email: sessionUser?.email ?? "",
@@ -196,11 +198,16 @@ export function AccountMenu({ compact = false }: { compact?: boolean }) {
 
           <DropdownMenuSeparator className="mx-1 my-1" />
 
-          <AccountMenuItem icon={LifeBuoy} label="Central de ajuda" />
+          <AccountMenuItem
+            icon={LifeBuoy}
+            label="Central de ajuda"
+            onClick={() => setHelpOpen(true)}
+          />
           <AccountMenuItem icon={LogOut} label="Sair" onClick={signOut} />
         </DropdownMenuContent>
       </DropdownMenu>
       <UsageDialog open={usageOpen} onOpenChange={setUsageOpen} />
+      <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} />
     </>
   );
 }

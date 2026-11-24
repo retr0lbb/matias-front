@@ -1,0 +1,21 @@
+# Built inside the image
+node_modules
+.next
+out
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# Local secrets and config never go into the image (values come as build args)
+.env*
+
+# Not needed to build
+.git
+.gitignore
+.vscode
+.claude
+*.md
+Dockerfile
+.dockerignore
+package-lock.json
+npm-debug.log*
+pnpm-debug.log*
