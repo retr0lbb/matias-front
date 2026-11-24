@@ -11,12 +11,11 @@ import {
   Wrench,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { MOCK_CHAT_TITLE } from "@/lib/chat/mock-conversation";
+import { useRefreshUser } from "@/hooks/use-refresh-user";
 import { useUiStore } from "@/stores/ui-store";
 import { AccountMenu } from "./account-menu";
-import { ChatSideBarItems } from "./chat-sidebar-items";
+import { ConversationList } from "./conversation-list";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 
@@ -40,29 +39,6 @@ const navItems: { label: string; icon: LucideIcon; trailing?: ReactNode }[] = [
   },
 ];
 
-const conversationGroups = [
-  {
-    label: "Hoje",
-    items: ["O que significa farmar aura", "Iluminismo e o Muro de Berlim"],
-  },
-  {
-    label: "Últimos 7 dias",
-    items: [
-      "Ideias de aula Gen Z com aura",
-      "Prova de História: Guerra Fria",
-      "Jogos de matemática — 6º ano",
-    ],
-  },
-  {
-    label: "Outubro",
-    items: [
-      "Rubrica de redação dissertativa",
-      "Sequência didática: frações",
-      "Revisão do simulado — 3º ano",
-    ],
-  },
-];
-
 const railItems: { label: string; icon: LucideIcon }[] = [
   { label: "Nova conversa", icon: SquarePen },
   { label: "Buscar conversas", icon: Search },
@@ -73,6 +49,7 @@ const railItems: { label: string; icon: LucideIcon }[] = [
 export function Sidebar() {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
   const setCollapsed = useUiStore((s) => s.setSidebarCollapsed);
+  useRefreshUser();
 
   if (collapsed) {
     return <SidebarRail onExpand={() => setCollapsed(false)} />;
@@ -129,8 +106,6 @@ function SidebarRail({ onExpand }: { onExpand: () => void }) {
 }
 
 function SidebarPanel({ onCollapse }: { onCollapse: () => void }) {
-  const pathname = usePathname();
-
   return (
     <nav className="flex h-screen w-72 shrink-0 flex-col gap-1 border-r border-sidebar-border bg-sidebar px-3 py-3.5 text-sidebar-foreground">
       <header className="flex items-center justify-between px-1">
@@ -192,24 +167,10 @@ function SidebarPanel({ onCollapse }: { onCollapse: () => void }) {
       </div>
 
       <ScrollArea className="mt-3.5 min-h-0 flex-1">
-        <div className="flex flex-col gap-0.5">
-          {conversationGroups.map((group, groupIndex) => (
-            <div key={group.label} className="flex flex-col gap-0.5">
-              <p
-                className={`px-2.5 pb-1.5 text-xs font-medium text-ink-3 ${groupIndex === 0 ? "pt-0.5" : "pt-3.5"}`}
-              >
-                {group.label}
-              </p>
-              {group.items.map((title) => (
-                <ChatSideBarItems
-                  key={title}
-                  text={title}
-                  isSelected={pathname === "/chat" && title === MOCK_CHAT_TITLE}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
+        <p className="px-2.5 pt-0.5 pb-1.5 text-xs font-medium text-ink-3">
+          Conversas
+        </p>
+        <ConversationList />
       </ScrollArea>
 
       <AccountMenu />

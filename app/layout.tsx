@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Geist, Geist_Mono, Newsreader } from "next/font/google";
 import "./globals.css";
+import { EmailVerificationPrompt } from "@/components/email-verification-prompt";
 import { StoreHydration } from "@/components/store-hydration";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <StoreHydration />
         {children}
+        <EmailVerificationPrompt />
       </body>
     </html>
   );

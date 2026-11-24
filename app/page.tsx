@@ -7,7 +7,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { AuthGuard } from "@/components/auth-guard";
-import { Composer } from "@/components/composer";
+import { Greeting } from "@/components/greeting";
+import { HomeComposer } from "@/components/home-composer";
 import { Sidebar } from "@/components/sidebar";
 import { Button } from "@/components/ui/button";
 
@@ -60,15 +61,13 @@ function HomeContent() {
         <section className="flex flex-1 flex-col items-center justify-center overflow-y-auto pb-10">
           <div className="flex w-full max-w-180 flex-col gap-7">
             <div className="flex flex-col gap-2 px-1">
-              <h2 className="font-serif text-[44px] leading-[1.1] tracking-[-0.02em]">
-                Boa tarde, Henrique.
-              </h2>
+              <Greeting />
               <p className="font-serif text-xl italic text-ink-2">
                 O que vamos preparar para as suas turmas hoje?
               </p>
             </div>
 
-            <Composer />
+            <HomeComposer />
 
             <ul className="flex flex-col">
               {suggestions.map(({ icon: Icon, title, detail }, i) => (

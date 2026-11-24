@@ -11,7 +11,10 @@ import { Message, MessageContent } from "../ui/message";
 
 export function UserMessage({ message }: { message: UserMessageType }) {
   return (
-    <Message align="end">
+    <Message
+      align="end"
+      className="animate-in fade-in-0 slide-in-from-bottom-2 duration-300 motion-reduce:animate-none"
+    >
       <MessageContent className="items-end gap-2">
         {message.attachments && message.attachments.length > 0 && (
           <AttachmentGroup className="justify-end py-0">

@@ -1,19 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  createFakeReply,
-  createMessageId,
-  FAKE_REPLY_DELAY,
-  THINKING_PHASES,
-} from "@/lib/chat/fake-assistant";
-import type {
-  ChatAttachment,
-  ChatMessage,
-  PendingReply,
-  UserMessage as UserMessageType,
-} from "@/lib/chat/types";
-import { useUiStore } from "@/stores/ui-store";
+import { UNTITLED_CONVERSATION } from "@/lib/api/conversations";
+import { NEW_CHAT_ID, useChatStore } from "@/stores/chat-store";
+import { useConversationsStore } from "@/stores/conversations-store";
 import { Composer } from "../composer";
 import {
   MessageScroller,
@@ -23,96 +12,34 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "../ui/message-scroller";
-import { AssistantMessage, PendingAssistantMessage } from "./assistant-message";
+import { AssistantMessage } from "./assistant-message";
 import { ChatHeader } from "./chat-header";
+import { LiveAssistantMessage } from "./live-assistant-message";
 import { UserMessage } from "./user-message";
 
-const PHASE_INTERVAL = 1400;
-
-type ChatViewProps = {
-  title: string;
-  initialMessages: ChatMessage[];
-};
+const NO_MESSAGES: never[] = [];
 
 /**
- * Full chat screen: header, scrollable thread and composer.
- * Replies come from a fake assistant until the real API is wired in.
+ * Full chat screen: header, scrollable thread and composer. Messages come
+ * from the chat store; the reply being streamed is shown live at the end.
  */
-export function ChatView({ title, initialMessages }: ChatViewProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [pending, setPending] = useState<PendingReply | null>(null);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-  const clearTimers = useCallback(() => {
-    for (const t of timers.current) {
-      clearTimeout(t);
-      clearInterval(t);
-    }
-    timers.current = [];
-  }, []);
-
-  useEffect(() => clearTimers, [clearTimers]);
-
-  const startReply = useCallback(
-    (user: UserMessageType) => {
-      clearTimers();
-      const startedAt = Date.now();
-      const reasoning = useUiStore.getState().reasoning;
-      setPending({ startedAt, phase: THINKING_PHASES[0] });
-
-      let phase = 0;
-      timers.current.push(
-        setInterval(() => {
-          phase = Math.min(phase + 1, THINKING_PHASES.length - 1);
-          setPending((p) => (p ? { ...p, phase: THINKING_PHASES[phase] } : p));
-        }, PHASE_INTERVAL),
-        setTimeout(() => {
-          clearTimers();
-          const reply = createFakeReply(
-            user,
-            reasoning,
-            Date.now() - startedAt,
-          );
-          setMessages((list) => [...list, reply]);
-          setPending(null);
-        }, FAKE_REPLY_DELAY[reasoning]),
-      );
-    },
-    [clearTimers],
+export function ChatView({ conversationId }: { conversationId: string }) {
+  const messages = useChatStore(
+    (s) => s.threads[conversationId]?.messages ?? NO_MESSAGES,
   );
+  const threadTitle = useChatStore((s) => s.threads[conversationId]?.title);
+  const listTitle = useConversationsStore(
+    (s) => s.conversations.find((c) => c.id === conversationId)?.title,
+  );
+  const live = useChatStore((s) => s.live);
+  const send = useChatStore((s) => s.send);
+  const stop = useChatStore((s) => s.stop);
 
-  function send(text: string, attachments: ChatAttachment[]) {
-    const user: UserMessageType = {
-      id: createMessageId(),
-      role: "user",
-      text,
-      attachments: attachments.length ? attachments : undefined,
-    };
-    setMessages((list) => [...list, user]);
-    startReply(user);
-  }
-
-  function stop() {
-    clearTimers();
-    setPending(null);
-    setMessages((list) => [
-      ...list,
-      {
-        id: createMessageId(),
-        role: "assistant",
-        blocks: [{ type: "notice", text: "Você interrompeu a resposta." }],
-      },
-    ]);
-  }
-
-  function regenerate(assistantId: string) {
-    const index = messages.findIndex((m) => m.id === assistantId);
-    const previous = messages[index - 1];
-    if (index < 1 || previous?.role !== "user") return;
-    // Drop this answer and everything after it, then answer again.
-    setMessages(messages.slice(0, index));
-    startReply(previous);
-  }
+  const liveHere =
+    live && (live.conversationId ?? NEW_CHAT_ID) === conversationId
+      ? live
+      : null;
+  const title = listTitle ?? threadTitle ?? UNTITLED_CONVERSATION;
 
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col">
@@ -131,18 +58,14 @@ export function ChatView({ title, initialMessages }: ChatViewProps) {
                   {message.role === "user" ? (
                     <UserMessage message={message} />
                   ) : (
-                    <AssistantMessage
-                      message={message}
-                      onRegenerate={
-                        pending ? undefined : () => regenerate(message.id)
-                      }
-                    />
+                    // No regenerate: the backend has no route for it yet.
+                    <AssistantMessage message={message} />
                   )}
                 </MessageScrollerItem>
               ))}
-              {pending && (
-                <MessageScrollerItem messageId="pending">
-                  <PendingAssistantMessage pending={pending} />
+              {liveHere && (
+                <MessageScrollerItem messageId="live">
+                  <LiveAssistantMessage live={liveHere} />
                 </MessageScrollerItem>
               )}
             </MessageScrollerContent>
@@ -155,8 +78,15 @@ export function ChatView({ title, initialMessages }: ChatViewProps) {
         <Composer
           variant="thread"
           placeholder="Responda ou peça outra coisa…"
-          isGenerating={Boolean(pending)}
-          onSend={send}
+          // One reply at a time, even if it belongs to another chat.
+          isGenerating={Boolean(live)}
+          onSend={(prompt) =>
+            send({
+              prompt,
+              conversationId:
+                conversationId === NEW_CHAT_ID ? null : conversationId,
+            })
+          }
           onStop={stop}
         />
       </div>

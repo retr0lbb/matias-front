@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
+import { BACKEND_URL } from "./lib/backend-url";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Proxy /api/* to the backend so its session cookie is first-party.
+  // This proxy buffers whole responses, so the chat stream has its own
+  // route handler (app/api/ai/chat/stream/route.ts), which takes precedence.
+  rewrites() {
+    return [{ source: "/api/:path*", destination: `${BACKEND_URL}/:path*` }];
+  },
   cacheComponents: true,
   partialPrefetching: true,
   experimental: {

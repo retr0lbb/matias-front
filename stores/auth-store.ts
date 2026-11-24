@@ -5,13 +5,32 @@ import {
   type StateStorage,
 } from "zustand/middleware";
 
+export type SessionUser = {
+  id?: string;
+  name: string;
+  email: string;
+  emailVerified: boolean;
+  loginProvider?: "LOCAL" | "GOOGLE";
+};
+
 type AuthState = {
-  /** Session token (fictitious for now) used for session-based auth. */
-  hostId: string | null;
-  /** "Manter conectado": keep the token across browser sessions. */
+  /**
+   * The signed-in user. The real session is the backend's cookie; this is
+   * the client's copy so pages know who is signed in without a request.
+   */
+  user: SessionUser | null;
+  /** "Manter conectado": keep the user across browser sessions. */
   remember: boolean;
-  signIn: (hostId: string, remember: boolean) => void;
-  clearHostId: () => void;
+  signIn: (user: SessionUser, remember: boolean) => void;
+  signOut: () => void;
+  /** Replaces the user with fresh data (e.g. from GET /me), keeping `remember`. */
+  setUser: (user: SessionUser) => void;
+  setEmailVerified: (emailVerified: boolean) => void;
+
+  /** "Missing e-mail verification" popup, opened by a 403 from the API. */
+  verificationPromptOpen: boolean;
+  openVerificationPrompt: () => void;
+  closeVerificationPrompt: () => void;
 };
 
 /**
@@ -34,23 +53,29 @@ const authStorage: StateStorage = {
   },
 };
 
-export function createFakeHostId() {
-  return `host_${crypto.randomUUID().replaceAll("-", "")}`;
-}
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
-      hostId: null,
+      user: null,
       remember: false,
-      signIn: (hostId, remember) => set({ hostId, remember }),
-      clearHostId: () => set({ hostId: null, remember: false }),
+      signIn: (user, remember) => set({ user, remember }),
+      signOut: () =>
+        set({ user: null, remember: false, verificationPromptOpen: false }),
+      setUser: (user) => set({ user }),
+      setEmailVerified: (emailVerified) =>
+        set((state) =>
+          state.user ? { user: { ...state.user, emailVerified } } : {},
+        ),
+
+      verificationPromptOpen: false,
+      openVerificationPrompt: () => set({ verificationPromptOpen: true }),
+      closeVerificationPrompt: () => set({ verificationPromptOpen: false }),
     }),
     {
       name: "matias-auth",
       storage: createJSONStorage(() => authStorage),
       partialize: (state) => ({
-        hostId: state.hostId,
+        user: state.user,
         remember: state.remember,
       }),
       skipHydration: true,

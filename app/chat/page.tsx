@@ -1,11 +1,6 @@
-import type { Metadata } from "next";
-import { ChatView } from "@/components/chat/chat-view";
-import { MOCK_CHAT_TITLE, MOCK_MESSAGES } from "@/lib/chat/mock-conversation";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: `${MOCK_CHAT_TITLE} — MATIAS`,
-};
-
-export default function ChatPage() {
-  return <ChatView title={MOCK_CHAT_TITLE} initialMessages={MOCK_MESSAGES} />;
+// Chats live at /chat/<id>; a new one starts from the home composer.
+export default function ChatIndexPage() {
+  redirect("/");
 }

@@ -122,12 +122,14 @@ export function Composer({
             className="hidden"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
+          {/* Uploads (POST /rag/documents) aren't wired yet. */}
           <Button
             type="button"
             variant="outline"
             size="icon"
-            aria-label="Anexar arquivo"
-            title="Anexar arquivo"
+            disabled
+            aria-label="Anexar arquivo (em breve)"
+            title="Anexar arquivo — em breve"
             onClick={() => inputRef.current?.click()}
             className="size-8.5 rounded-[9px] bg-transparent text-ink-2 shadow-none"
           >

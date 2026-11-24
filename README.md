@@ -20,6 +20,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## TODO
+
+- [ ] **Route the Google sign-in callback through the frontend proxy.** Today Google calls the backend directly (`http://localhost:3000/auth/oidc/google/callback`). That only works locally because browsers share `localhost` cookies across ports; with the frontend and backend on different domains, the session cookie won't reach the frontend. To fix it:
+  1. Add `http://localhost:3001/api/auth/oidc/google/callback` (and the production equivalent) to the OAuth client's authorized redirect URIs in the Google Cloud console.
+  2. On the backend, set `GOOGLE_REDIRECT_URL` to that URL.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

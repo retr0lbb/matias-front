@@ -1,10 +1,15 @@
 "use client";
 
 import { AtSign, CircleAlert, Eye, EyeOff, LockKeyhole } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useId, useState } from "react";
+import { getMe, googleLoginUrl, login } from "@/lib/api/auth";
+import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
-import { createFakeHostId, useAuthStore } from "@/stores/auth-store";
+import { isEmail } from "@/lib/validation";
+import { useAuthStore } from "@/stores/auth-store";
+import { GoogleIcon } from "./google-icon";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import {
@@ -15,28 +20,26 @@ import {
 } from "./ui/input-group";
 import { Label } from "./ui/label";
 
-type Errors = { identifier?: string; password?: string };
+type Errors = { email?: string; password?: string };
 
-// Test mode: the local strategy accepts any username/e-mail and password.
-// Only empty fields are rejected. Replace with the real auth call later.
-function validate(identifier: string, password: string): Errors {
+function validate(email: string, password: string): Errors {
   const errors: Errors = {};
-  if (!identifier.trim()) errors.identifier = "Informe seu usuário ou e-mail.";
+  if (!email.trim()) errors.email = "Informe seu e-mail.";
+  else if (!isEmail(email)) errors.email = "Informe um e-mail válido.";
   if (!password) errors.password = "Informe sua senha.";
   return errors;
 }
 
-function GoogleIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      aria-hidden="true"
-      className={className}
-    >
-      <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-    </svg>
-  );
+function loginErrorMessage(error: unknown) {
+  if (error instanceof ApiError) {
+    // 404 is "User not found"; show the same message so we don't reveal
+    // which e-mails have an account.
+    if (error.status === 401 || error.status === 404) {
+      return "E-mail ou senha incorretos.";
+    }
+    if (error.status < 500) return error.message;
+  }
+  return "Não foi possível entrar agora. Tente novamente.";
 }
 
 const inputGroupClass =
@@ -45,27 +48,45 @@ const inputGroupClass =
 export function LoginForm() {
   const router = useRouter();
   const signIn = useAuthStore((s) => s.signIn);
-  const ids = { identifier: useId(), password: useId(), remember: useId() };
+  const ids = { email: useId(), password: useId(), remember: useId() };
 
-  const [identifier, setIdentifier] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Errors only show after the first submit attempt, then update live.
-  const errors = submitted ? validate(identifier, password) : {};
+  const errors = submitted ? validate(email, password) : {};
 
-  function finishSignIn() {
-    signIn(createFakeHostId(), remember);
-    router.push("/");
+  function signInWithGoogle() {
+    window.location.assign(googleLoginUrl(`${window.location.origin}/`));
   }
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSubmitted(true);
-    const result = validate(identifier, password);
-    if (Object.keys(result).length === 0) finishSignIn();
+    if (pending || Object.keys(validate(email, password)).length > 0) return;
+
+    setPending(true);
+    setFormError(null);
+    try {
+      const { mfaRequired } = await login({ email: email.trim(), password });
+      if (mfaRequired) {
+        setFormError(
+          "Sua conta usa verificação em duas etapas, que ainda não está disponível aqui.",
+        );
+        return;
+      }
+      signIn(await getMe(), remember);
+      router.push("/");
+    } catch (error) {
+      setFormError(loginErrorMessage(error));
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -79,14 +100,14 @@ export function LoginForm() {
           Entre na sua conta
         </h1>
         <p className="text-sm leading-normal text-muted-foreground">
-          Use sua conta Google da escola ou seu usuário e senha.
+          Use sua conta Google da escola ou seu e-mail e senha.
         </p>
       </div>
 
       <Button
         type="button"
         variant="outline"
-        onClick={finishSignIn}
+        onClick={signInWithGoogle}
         className="h-10 gap-2 bg-card"
       >
         <GoogleIcon className="size-4.25" />
@@ -102,46 +123,43 @@ export function LoginForm() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label
-            htmlFor={ids.identifier}
-            className={cn(errors.identifier && "text-destructive")}
+            htmlFor={ids.email}
+            className={cn(errors.email && "text-destructive")}
           >
-            Usuário ou e-mail
+            E-mail
           </Label>
           <InputGroup className={inputGroupClass}>
             <InputGroupAddon>
               <AtSign
                 className={cn(
                   "size-4",
-                  errors.identifier
-                    ? "text-destructive"
-                    : "text-muted-foreground",
+                  errors.email ? "text-destructive" : "text-muted-foreground",
                 )}
               />
             </InputGroupAddon>
             <InputGroupInput
-              id={ids.identifier}
-              name="identifier"
-              autoComplete="username"
+              id={ids.email}
+              name="email"
+              type="email"
+              autoComplete="email"
               placeholder="nome@escola.edu.br"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              aria-invalid={Boolean(errors.identifier)}
-              aria-describedby={
-                errors.identifier ? `${ids.identifier}-error` : undefined
-              }
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? `${ids.email}-error` : undefined}
             />
-            {errors.identifier && (
+            {errors.email && (
               <InputGroupAddon align="inline-end">
                 <CircleAlert className="size-4 text-destructive" />
               </InputGroupAddon>
             )}
           </InputGroup>
-          {errors.identifier && (
+          {errors.email && (
             <p
-              id={`${ids.identifier}-error`}
+              id={`${ids.email}-error`}
               className="text-[13px] text-destructive"
             >
-              {errors.identifier}
+              {errors.email}
             </p>
           )}
         </div>
@@ -223,18 +241,24 @@ export function LoginForm() {
         Manter conectado neste computador
       </Label>
 
-      <Button type="submit" className="h-10">
-        Entrar
+      {formError && (
+        <p role="alert" className="text-[13px] text-destructive">
+          {formError}
+        </p>
+      )}
+
+      <Button type="submit" className="h-10" disabled={pending}>
+        {pending ? "Entrando…" : "Entrar"}
       </Button>
 
       <p className="flex justify-center gap-1.5 text-[13px] text-muted-foreground">
         Ainda não tem conta?
-        <button
-          type="button"
-          className="cursor-pointer font-medium text-foreground hover:underline"
+        <Link
+          href="/register"
+          className="font-medium text-foreground hover:underline"
         >
           Criar conta de professor
-        </button>
+        </Link>
       </p>
     </form>
   );

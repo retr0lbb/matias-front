@@ -5,13 +5,14 @@ export type ChatAttachment = {
 };
 
 export type ThinkingStep = {
-  title: string;
+  title?: string;
   text: string;
 };
 
 /** Advanced reasoning: a collapsible trace of steps shown above the answer. */
 export type DetailedThinking = {
-  seconds: number;
+  /** Unknown for saved messages, which only keep the thinking text. */
+  seconds?: number;
   steps: ThinkingStep[];
 };
 

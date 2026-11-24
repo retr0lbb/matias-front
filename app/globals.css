@@ -149,3 +149,13 @@
     @apply font-sans;
   }
 }
+
+/* Indeterminate bar on the "creating document" card. */
+@keyframes doc-progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}

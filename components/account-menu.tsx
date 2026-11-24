@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { logout } from "@/lib/api/auth";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -22,12 +23,15 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 
-const user = {
-  name: "Henrique Barbosa",
-  email: "retr0lbb@gmail.com",
-  initials: "HB",
-  plan: "Gratuito",
-};
+// Plan isn't wired to the API yet (GET /usage).
+const PLAN_LABEL = "Gratuito";
+
+function initialsOf(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+  return (first + last).toUpperCase() || "?";
+}
 
 function AccountMenuItem({
   icon: Icon,
@@ -56,10 +60,22 @@ function AccountMenuItem({
 
 export function AccountMenu({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
-  const clearHostId = useAuthStore((s) => s.clearHostId);
+  const sessionUser = useAuthStore((s) => s.user);
+  const clearSession = useAuthStore((s) => s.signOut);
+  const user = {
+    name: sessionUser?.name ?? "",
+    email: sessionUser?.email ?? "",
+    initials: initialsOf(sessionUser?.name ?? ""),
+    plan: PLAN_LABEL,
+  };
 
-  function signOut() {
-    clearHostId();
+  async function signOut() {
+    try {
+      await logout();
+    } catch {
+      // Still sign out locally; the session expires on the server anyway.
+    }
+    clearSession();
     router.push("/login");
   }
 

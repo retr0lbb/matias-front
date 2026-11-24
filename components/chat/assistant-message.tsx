@@ -1,12 +1,8 @@
-import type {
-  AssistantMessage as AssistantMessageType,
-  PendingReply,
-} from "@/lib/chat/types";
+import type { AssistantMessage as AssistantMessageType } from "@/lib/chat/types";
 import { Message, MessageContent } from "../ui/message";
 import { AnswerBlock, blocksToText } from "./answer-blocks";
 import { MessageActions } from "./message-actions";
 import { ThinkingDetailed } from "./thinking-detailed";
-import { ThinkingSimple } from "./thinking-simple";
 
 export function AssistantMessage({
   message,
@@ -21,7 +17,13 @@ export function AssistantMessage({
   return (
     <Message>
       <MessageContent className="gap-3">
-        {message.thinking && <ThinkingDetailed thinking={message.thinking} />}
+        {message.thinking && (
+          <ThinkingDetailed
+            thinking={message.thinking}
+            // Finished replies keep the reasoning folded (it was shown live).
+            defaultOpen={false}
+          />
+        )}
         <div className="flex flex-col gap-2.5">
           {message.blocks.map((block, i) => (
             // Blocks are static per message, so the index is a stable key.
@@ -37,21 +39,6 @@ export function AssistantMessage({
             onOpenAsDocument={hasList ? () => {} : undefined}
           />
         )}
-      </MessageContent>
-    </Message>
-  );
-}
-
-/** Assistant turn that is still being generated. */
-export function PendingAssistantMessage({
-  pending,
-}: {
-  pending: PendingReply;
-}) {
-  return (
-    <Message>
-      <MessageContent>
-        <ThinkingSimple pending={pending} />
       </MessageContent>
     </Message>
   );

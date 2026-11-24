@@ -33,17 +33,23 @@ export function ThinkingDetailed({
               <Brain className="size-3.75" />
             </TraceIcon>
             <TraceTitle>
-              Pensou por {formatDuration(thinking.seconds)}
+              {thinking.seconds === undefined
+                ? "Raciocínio"
+                : `Pensou por ${formatDuration(thinking.seconds)}`}
             </TraceTitle>
           </TraceLine>
         </TraceCollapsibleTrigger>
         <TraceCollapsibleContent className="flex flex-col gap-2.5 border-input">
-          {thinking.steps.map((step) => (
-            <div key={step.title} className="flex flex-col gap-1">
-              <p className="text-[13px] font-semibold text-ink-2">
-                {step.title}
-              </p>
-              <p className="text-[13px] leading-[1.6] text-muted-foreground">
+          {thinking.steps.map((step, i) => (
+            // Steps never reorder, so the index is a stable key.
+            // biome-ignore lint/suspicious/noArrayIndexKey: static content
+            <div key={i} className="flex flex-col gap-1">
+              {step.title && (
+                <p className="text-[13px] font-semibold text-ink-2">
+                  {step.title}
+                </p>
+              )}
+              <p className="text-[13px] leading-[1.6] whitespace-pre-wrap text-muted-foreground">
                 {step.text}
               </p>
             </div>

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-export type ModelId = "base" | "avancado" | "ultra";
+export type ModelId = "auto" | "base" | "avancado" | "ultra";
 export type ReasoningId = "padrao" | "alto" | "ultra";
 
 type UiState = {
@@ -24,7 +24,7 @@ export const useUiStore = create<UiState>()(
       toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
-      model: "avancado",
+      model: "auto",
       reasoning: "alto",
       setModel: (model) => set({ model }),
       setReasoning: (reasoning) => set({ reasoning }),
