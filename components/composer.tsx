@@ -141,8 +141,8 @@ export function Composer({
       onDragLeave={onDrag}
       onDrop={onDrop}
       className={cn(
-        "relative flex flex-col gap-3.5 rounded-2xl border border-input bg-surface px-3.5 pt-4 pb-3 transition-shadow focus-within:shadow-[0_4px_16px_#1c1a170f]",
-        isHome && "pt-4.5",
+        "relative flex flex-col gap-3 rounded-2xl border border-input bg-surface px-3 pt-3.5 pb-2.5 md:gap-3.5 md:px-3.5 md:pt-4 md:pb-3 transition-shadow focus-within:shadow-[0_4px_16px_#1c1a170f]",
+        isHome && "md:pt-4.5",
         className,
       )}
     >
@@ -180,7 +180,7 @@ export function Composer({
         aria-label="Mensagem"
         className={cn(
           "max-h-50 min-h-6 resize-none rounded-none border-0 bg-transparent p-0 shadow-none placeholder:text-ink-3 focus-visible:ring-0 dark:bg-transparent",
-          isHome ? "text-base md:text-base" : "text-[15px] md:text-[15px]",
+          isHome ? "text-base md:text-base" : "text-base md:text-[15px]",
         )}
       />
 
@@ -217,7 +217,9 @@ export function Composer({
             <span className="text-xs text-ink-3">Aguardando os arquivos…</span>
           ) : (
             isHome && (
-              <span className="text-xs text-ink-3">Enter para enviar</span>
+              <span className="hidden text-xs text-ink-3 sm:inline">
+                Enter para enviar
+              </span>
             )
           )}
           {isGenerating ? (

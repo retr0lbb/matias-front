@@ -9,6 +9,10 @@ type UiState = {
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
 
+  /** Mobile drawer with the sidebar; not persisted. */
+  mobileSidebarOpen: boolean;
+  setMobileSidebarOpen: (open: boolean) => void;
+
   /** Composer model / reasoning choice, shared by every composer. */
   model: ModelId;
   reasoning: ReasoningId;
@@ -36,6 +40,9 @@ export const useUiStore = create<UiState>()(
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
       toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+
+      mobileSidebarOpen: false,
+      setMobileSidebarOpen: (mobileSidebarOpen) => set({ mobileSidebarOpen }),
 
       model: "auto",
       reasoning: "alto",

@@ -9,7 +9,7 @@ export default function ChatLayout({
 }) {
   return (
     <AuthGuard>
-      <div className="flex h-screen w-screen overflow-hidden bg-background">
+      <div className="flex h-dvh w-screen overflow-hidden bg-background">
         <Sidebar />
         <main className="flex min-w-0 flex-1">{children}</main>
       </div>

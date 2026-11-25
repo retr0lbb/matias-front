@@ -60,9 +60,9 @@ export function PlansView() {
   const resetsIn = usage ? resetsInLabel(usage.cycle.resetsAt) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-215 flex-col gap-8 px-6 pt-10 pb-16">
+    <div className="mx-auto flex w-full max-w-215 flex-col gap-8 px-4 pt-16 pb-16 sm:px-6 md:pt-10">
       <header className="flex flex-col gap-2">
-        <h1 className="font-serif text-[32px] leading-tight font-medium tracking-[-0.01em]">
+        <h1 className="font-serif text-[28px] leading-tight sm:text-[32px] font-medium tracking-[-0.01em]">
           Planos
         </h1>
         <p className="max-w-130 text-[15px] text-ink-2">

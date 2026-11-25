@@ -70,7 +70,7 @@ export function ChatView({ conversationId }: { conversationId: string }) {
       <MessageScrollerProvider autoScroll defaultScrollPosition="end">
         <MessageScroller className="flex-1">
           <MessageScrollerViewport aria-label="Mensagens da conversa">
-            <MessageScrollerContent className="mx-auto w-full max-w-180 gap-6 px-6 pt-4 pb-8">
+            <MessageScrollerContent className="mx-auto w-full max-w-180 gap-6 px-4 pt-4 pb-8 md:px-6">
               {messages.map((message) => (
                 <MessageScrollerItem
                   key={message.id}
@@ -96,7 +96,7 @@ export function ChatView({ conversationId }: { conversationId: string }) {
         </MessageScroller>
       </MessageScrollerProvider>
 
-      <div className="mx-auto w-full max-w-180 shrink-0 px-6 pb-2 lg:px-0">
+      <div className="mx-auto w-full max-w-180 shrink-0 px-3 pb-2 md:px-6 lg:px-0">
         <Composer
           variant="thread"
           placeholder="Responda ou peça outra coisa…"
@@ -117,7 +117,7 @@ export function ChatView({ conversationId }: { conversationId: string }) {
           onStop={stop}
         />
       </div>
-      <p className="shrink-0 pb-3.5 text-center text-xs text-ink-3">
+      <p className="shrink-0 px-4 pb-2.5 text-center text-[11px] text-ink-3 md:pb-3.5 md:text-xs">
         O MATIAS pode errar. Revise o material antes de publicar para seus
         alunos.
       </p>

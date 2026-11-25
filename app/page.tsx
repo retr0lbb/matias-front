@@ -41,11 +41,11 @@ export default function Home() {
 
 function HomeContent() {
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background">
+    <div className="flex h-dvh w-screen overflow-hidden bg-background">
       <Sidebar />
 
-      <main className="flex min-w-0 flex-1 flex-col px-5 pt-3.5 pb-5">
-        <header className="flex h-9 items-center justify-end gap-2">
+      <main className="flex min-w-0 flex-1 flex-col px-3 pb-3 md:px-5 md:pt-3.5 md:pb-5">
+        <header className="flex h-12.5 shrink-0 items-center justify-end gap-2 pl-12 md:h-9 md:pl-0">
           <Button
             variant="outline"
             nativeButton={false}
@@ -55,34 +55,38 @@ function HomeContent() {
             <Sparkles className="size-3.75 text-brand" />
             Conhecer o Pro
           </Button>
-          <div className="flex h-8 items-center gap-2 rounded-full border bg-surface pr-3 pl-2.5 text-[13px] text-ink-2">
+          <div className="hidden h-8 items-center gap-2 rounded-full sm:flex border bg-surface pr-3 pl-2.5 text-[13px] text-ink-2">
             <GraduationCap className="size-3.75" />6 turmas sincronizadas
             <span className="size-1.75 rounded-full bg-success" />
           </div>
         </header>
 
-        <section className="flex flex-1 flex-col items-center justify-center overflow-y-auto pb-10">
-          <div className="flex w-full max-w-180 flex-col gap-7">
-            <div className="flex flex-col gap-2 px-1">
+        {/* Mobile: greeting and suggestions centered, composer docked at
+            the bottom (like a chat). Desktop: everything centered. */}
+        <section className="flex min-h-0 flex-1 flex-col items-center overflow-y-auto md:justify-center md:pb-10">
+          <div className="flex w-full max-w-180 flex-1 flex-col gap-5 md:flex-none md:gap-7">
+            <div className="mt-auto flex flex-col gap-1.5 px-2 md:mt-0 md:gap-2 md:px-1">
               <Greeting />
-              <p className="font-serif text-xl italic text-ink-2">
+              <p className="font-serif text-lg italic text-ink-2 md:text-xl">
                 O que vamos preparar para as suas turmas hoje?
               </p>
             </div>
 
-            <HomeComposer />
+            <div className="sticky bottom-0 order-last bg-background pt-1 md:static md:order-none md:pt-0">
+              <HomeComposer />
+            </div>
 
-            <ul className="flex flex-col">
+            <ul className="mb-auto flex flex-col md:mb-0">
               {suggestions.map(({ icon: Icon, title, detail }, i) => (
                 <li key={title}>
                   <button
                     type="button"
-                    className={`group flex w-full cursor-pointer items-center gap-3.5 border-b px-3 py-3.25 text-left transition-colors hover:bg-muted/60 ${i === 0 ? "border-t" : ""}`}
+                    className={`group flex w-full cursor-pointer items-center gap-3.5 border-b px-3 py-3 md:py-3.25 text-left transition-colors hover:bg-muted/60 ${i === 0 ? "border-t" : ""}`}
                   >
                     <Icon className="size-4.5 shrink-0 text-ink-2" />
-                    <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2.5">
                       <span className="text-sm font-medium">{title}</span>
-                      <span className="truncate text-[13px] text-ink-3">
+                      <span className="max-w-full truncate text-[13px] text-ink-3">
                         {detail}
                       </span>
                     </span>
@@ -94,7 +98,7 @@ function HomeContent() {
           </div>
         </section>
 
-        <footer className="text-center text-xs text-ink-3">
+        <footer className="pt-2 text-center text-[11px] text-ink-3 md:pt-0 md:text-xs">
           O MATIAS pode errar. Revise o material antes de publicar para seus
           alunos.
         </footer>

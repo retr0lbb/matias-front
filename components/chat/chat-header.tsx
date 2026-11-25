@@ -37,7 +37,7 @@ export function ChatHeader({
   }
 
   return (
-    <header className="flex h-12.5 shrink-0 items-center justify-between gap-3 pr-4 pl-6">
+    <header className="flex h-12.5 shrink-0 items-center justify-between gap-2 pr-2 pl-13 md:gap-3 md:pr-4 md:pl-6">
       {conversationId && renaming ? (
         <div className="-ml-1.5 w-full max-w-90 pt-0.5">
           <RenameInput
@@ -70,10 +70,13 @@ export function ChatHeader({
         <Button
           variant="ghost"
           onClick={share}
-          className="h-8 gap-2 rounded-lg px-2.5 text-[13px] text-ink-2"
+          aria-label={shared ? "Link copiado" : "Compartilhar"}
+          className="h-8 gap-2 rounded-lg px-2 text-[13px] text-ink-2 md:px-2.5"
         >
           {shared ? <Check className="size-4" /> : <Share className="size-4" />}
-          {shared ? "Link copiado" : "Compartilhar"}
+          <span className="hidden sm:inline">
+            {shared ? "Link copiado" : "Compartilhar"}
+          </span>
         </Button>
         {conversationId && (
           <ConversationMenu

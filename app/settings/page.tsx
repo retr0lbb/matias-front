@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function SettingsPage() {
   return (
     <AuthGuard>
-      <div className="flex h-screen w-screen overflow-hidden bg-background">
+      <div className="flex h-dvh w-screen overflow-hidden bg-background">
         <Sidebar />
         <main className="min-w-0 flex-1 overflow-y-auto">
           <SettingsView />

@@ -1,12 +1,15 @@
 "use client";
 
+import { Dialog } from "@base-ui/react/dialog";
 import {
   GraduationCap,
   type LucideIcon,
+  Menu,
   PanelLeft,
   Search,
   SquarePen,
   Wrench,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { type ReactNode, useEffect } from "react";
@@ -101,11 +104,63 @@ export function Sidebar() {
   const setCollapsed = useUiStore((s) => s.setSidebarCollapsed);
   useRefreshUser();
 
-  if (collapsed) {
-    return <SidebarRail onExpand={() => setCollapsed(false)} />;
-  }
+  return (
+    <>
+      {/* Desktop: docked panel or rail. */}
+      <div className="hidden shrink-0 md:flex">
+        {collapsed ? (
+          <SidebarRail onExpand={() => setCollapsed(false)} />
+        ) : (
+          <SidebarPanel onCollapse={() => setCollapsed(true)} />
+        )}
+      </div>
+      {/* Mobile: floating menu button that opens the panel as a drawer. */}
+      <MobileSidebar />
+    </>
+  );
+}
 
-  return <SidebarPanel onCollapse={() => setCollapsed(true)} />;
+const MD_QUERY = "(min-width: 768px)";
+
+function MobileSidebar() {
+  const open = useUiStore((s) => s.mobileSidebarOpen);
+  const setOpen = useUiStore((s) => s.setMobileSidebarOpen);
+
+  // Growing past the mobile breakpoint swaps to the docked sidebar.
+  useEffect(() => {
+    if (!open) return;
+    const query = window.matchMedia(MD_QUERY);
+    const onChange = () => {
+      if (query.matches) setOpen(false);
+    };
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, [open, setOpen]);
+
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger
+        aria-label="Abrir menu"
+        title="Abrir menu"
+        className="fixed top-1.75 left-2.5 z-30 flex size-9 cursor-pointer items-center justify-center rounded-lg bg-background/80 text-ink-2 outline-none backdrop-blur-sm transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 md:hidden"
+      >
+        <Menu className="size-5" />
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/30 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0 motion-reduce:animate-none md:hidden" />
+        <Dialog.Popup
+          aria-label="Menu"
+          // Following a link (even to the current page) closes the drawer.
+          onClick={(e) => {
+            if ((e.target as HTMLElement).closest("a[href]")) setOpen(false);
+          }}
+          className="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,85vw)] shadow-[0_12px_32px_#1c1a1726] outline-none duration-200 data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left motion-reduce:animate-none md:hidden"
+        >
+          <SidebarPanel onClose={() => setOpen(false)} />
+        </Dialog.Popup>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
 }
 
 function RailButton({
@@ -138,7 +193,7 @@ function RailButton({
 
 function SidebarRail({ onExpand }: { onExpand: () => void }) {
   return (
-    <nav className="flex h-screen w-15 shrink-0 flex-col items-center gap-1.5 border-r border-sidebar-border bg-sidebar py-3.5 text-sidebar-foreground">
+    <nav className="flex h-dvh w-15 shrink-0 flex-col items-center gap-1.5 border-r border-sidebar-border bg-sidebar py-3.5 text-sidebar-foreground">
       <span
         title="MATIAS"
         className="flex size-9 items-center justify-center font-brand text-[22px] font-black italic"
@@ -161,20 +216,41 @@ function SidebarRail({ onExpand }: { onExpand: () => void }) {
   );
 }
 
-function SidebarPanel({ onCollapse }: { onCollapse: () => void }) {
+function SidebarPanel({
+  onCollapse,
+  onClose,
+}: {
+  /** Desktop: fold into the rail. */
+  onCollapse?: () => void;
+  /** Mobile drawer: close it. */
+  onClose?: () => void;
+}) {
   return (
-    <nav className="flex h-screen w-72 shrink-0 flex-col gap-1 border-r border-sidebar-border bg-sidebar px-3 py-3.5 text-sidebar-foreground">
+    <nav className="flex h-dvh w-full shrink-0 md:w-72 flex-col gap-1 border-r border-sidebar-border bg-sidebar px-3 py-3.5 text-sidebar-foreground">
       <header className="flex items-center justify-between px-1">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Recolher barra lateral"
-          title="Recolher barra lateral"
-          onClick={onCollapse}
-          className="text-ink-2 hover:bg-accent"
-        >
-          <PanelLeft className="size-4.5" />
-        </Button>
+        {onClose ? (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Fechar menu"
+            title="Fechar menu"
+            onClick={onClose}
+            className="text-ink-2 hover:bg-accent"
+          >
+            <X className="size-4.5" />
+          </Button>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Recolher barra lateral"
+            title="Recolher barra lateral"
+            onClick={onCollapse}
+            className="text-ink-2 hover:bg-accent"
+          >
+            <PanelLeft className="size-4.5" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon-sm"
@@ -201,7 +277,7 @@ function SidebarPanel({ onCollapse }: { onCollapse: () => void }) {
           <SquarePen />
           Nova conversa
         </span>
-        <kbd className="rounded-[5px] bg-white/12 px-1.5 py-0.5 font-sans text-[11px] font-normal text-primary-foreground/70">
+        <kbd className="hidden rounded-[5px] md:inline bg-white/12 px-1.5 py-0.5 font-sans text-[11px] font-normal text-primary-foreground/70">
           Ctrl K
         </kbd>
       </Button>
