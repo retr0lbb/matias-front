@@ -2,9 +2,11 @@
 
 import { cn } from "cn";
 import {
+  BookOpenText,
   ChevronDown,
   CircleAlert,
   Download,
+  File,
   FileText,
   FileType,
   LoaderCircle,
@@ -12,7 +14,14 @@ import {
   RotateCcw,
   X,
 } from "lucide-react";
-import { type RefObject, useEffect, useRef, useState } from "react";
+import {
+  type RefObject,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ApiError } from "@/lib/api/client";
 import {
   type DocumentFormat,
@@ -26,6 +35,7 @@ import {
   type PanelDocument,
   useDocumentPanelStore,
 } from "@/stores/document-panel-store";
+import { type DocumentPreviewMode, useUiStore } from "@/stores/ui-store";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -38,6 +48,21 @@ const VIEW_LABELS: Record<DocumentView, string> = {
   document: "Documento",
   "answer-key": "Gabarito",
 };
+
+const MODES = [
+  {
+    id: "page",
+    label: "Página",
+    icon: File,
+    hint: "Página real, ajustada à largura",
+  },
+  {
+    id: "reading",
+    label: "Leitura",
+    icon: BookOpenText,
+    hint: "Texto reorganizado para ler na tela",
+  },
+] as const;
 
 function errorMessage(error: unknown, action: "load" | "download") {
   if (error instanceof ApiError) {
@@ -53,6 +78,59 @@ function errorMessage(error: unknown, action: "load" | "download") {
     ? "Não foi possível carregar a pré-visualização."
     : "Não foi possível baixar o arquivo. Tente novamente.";
 }
+
+/**
+ * Screen-only overrides for the backend's preview page, which is laid out as
+ * a printed sheet (A4 width, margins in mm). The media queries match the
+ * iframe's width, so a narrow panel or a phone reflows the sheet instead of
+ * squeezing it; printing still uses the backend's own page styles.
+ */
+const RESPONSIVE_PREVIEW_CSS = `
+@media screen {
+  img, svg, video { max-width: 100%; height: auto; }
+  .sheet { overflow-wrap: break-word; }
+  .block-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+@media screen and (max-width: 860px) {
+  body { padding: 10px; }
+  .sheet {
+    padding: calc(var(--margin-top, 20mm) * 0.6) calc(var(--margin-right, 20mm) * 0.6)
+      calc(var(--margin-bottom, 20mm) * 0.6) calc(var(--margin-left, 20mm) * 0.6);
+  }
+}
+@media screen and (max-width: 560px) {
+  html, body { background: #fff; }
+  body { padding: 0; font-size: max(var(--base-size, 11pt), 14px); }
+  .sheet { width: 100%; padding: 20px 16px 32px; box-shadow: none; }
+  .header-brand { flex-wrap: wrap; }
+  .header-logo { max-width: 40%; }
+  .header-title { font-size: 1.25em; }
+  .header-field { flex-basis: 100%; white-space: normal; }
+  .header-field > :first-child { white-space: nowrap; }
+  .block-table table { min-width: 100%; width: max-content; max-width: none; }
+  .block-table th, .block-table td { min-width: 6em; max-width: 70vw; }
+}
+`;
+
+/** "Página" keeps the sheet at its real width; the panel scales it to fit. */
+const PAGE_PREVIEW_CSS = `
+@media screen {
+  .sheet { max-width: none; }
+}
+`;
+
+/** Adds the mode's overrides after the backend's own styles. */
+function withPreviewStyles(html: string, mode: DocumentPreviewMode) {
+  const css = mode === "page" ? PAGE_PREVIEW_CSS : RESPONSIVE_PREVIEW_CSS;
+  const style = `<style data-preview="${mode}">${css}</style>`;
+  const headEnd = html.search(/<\/head>/i);
+  return headEnd === -1
+    ? style + html
+    : html.slice(0, headEnd) + style + html.slice(headEnd);
+}
+
+/** A4 (210mm) plus the preview's 16px gutters, until the frame is measured. */
+const FALLBACK_PAGE_WIDTH = 826;
 
 /**
  * Previews already fetched in this session, by id, version and view, so
@@ -108,6 +186,8 @@ export function DocumentPanel({ document }: { document: PanelDocument }) {
   const view = useDocumentPanelStore((s) => s.view);
   const setView = useDocumentPanelStore((s) => s.setView);
   const close = useDocumentPanelStore((s) => s.close);
+  const mode = useUiStore((s) => s.documentPreviewMode);
+  const setMode = useUiStore((s) => s.setDocumentPreviewMode);
   const withKey = hasAnswerKey(document.documentType);
   const activeView: DocumentView = withKey ? view : "document";
 
@@ -155,8 +235,8 @@ export function DocumentPanel({ document }: { document: PanelDocument }) {
         if (e.key === "Escape") close();
       }}
     >
-      <header className="flex shrink-0 flex-col gap-2.5 border-b border-border px-4 pt-3 pb-3">
-        <div className="flex items-start gap-3">
+      <header className="flex shrink-0 flex-col gap-2.5 border-b border-border px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 sm:px-4">
+        <div className="flex items-start gap-2 sm:gap-3">
           <div className="flex min-w-0 flex-1 flex-col gap-0.5 pt-0.5">
             <h2
               className="truncate text-[15px] font-medium"
@@ -197,7 +277,7 @@ export function DocumentPanel({ document }: { document: PanelDocument }) {
                     ) : (
                       <Download className="size-4" />
                     )}
-                    Baixar
+                    <span className="max-[380px]:sr-only">Baixar</span>
                     <ChevronDown className="size-3.5 text-ink-3" />
                   </Button>
                 }
@@ -237,30 +317,50 @@ export function DocumentPanel({ document }: { document: PanelDocument }) {
           </div>
         </div>
 
-        {withKey && (
-          <div
-            role="tablist"
-            aria-label="Conteúdo"
-            className="flex w-fit gap-0.5 rounded-lg bg-muted p-0.5"
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {withKey && (
+            <div
+              role="tablist"
+              aria-label="Conteúdo"
+              className="flex w-fit gap-0.5 rounded-lg bg-muted p-0.5"
+            >
+              {(["document", "answer-key"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeView === tab}
+                  onClick={() => setView(tab)}
+                  className={segmentClass(activeView === tab)}
+                >
+                  {VIEW_LABELS[tab]}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <fieldset
+            aria-label="Modo de visualização"
+            className="ml-auto flex w-fit gap-0.5 rounded-lg border-0 bg-muted p-0.5"
           >
-            {(["document", "answer-key"] as const).map((tab) => (
+            {MODES.map(({ id, label, icon: Icon, hint }) => (
               <button
-                key={tab}
+                key={id}
                 type="button"
-                role="tab"
-                aria-selected={activeView === tab}
-                onClick={() => setView(tab)}
+                aria-pressed={mode === id}
+                title={hint}
+                onClick={() => setMode(id)}
                 className={cn(
-                  "h-7 cursor-pointer rounded-md px-3 text-[13px] font-medium text-ink-2 transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
-                  activeView === tab &&
-                    "bg-background text-foreground shadow-[0_1px_2px_#1c1a171f]",
+                  segmentClass(mode === id),
+                  "flex items-center gap-1.5 px-2.5",
                 )}
               >
-                {VIEW_LABELS[tab]}
+                <Icon className="size-3.5" />
+                {label}
               </button>
             ))}
-          </div>
-        )}
+          </fieldset>
+        </div>
 
         {actionError && (
           <p
@@ -276,8 +376,9 @@ export function DocumentPanel({ document }: { document: PanelDocument }) {
       <div className="relative min-h-0 flex-1 bg-muted/50">
         {state.status === "ready" && (
           <PreviewFrame
-            key={`${document.id}@${document.version}/${activeView}`}
+            key={`${document.id}@${document.version}/${activeView}/${mode}`}
             html={state.html}
+            mode={mode}
             title={`${VIEW_LABELS[activeView]}: ${document.title}`}
             iframeRef={iframeRef}
           />
@@ -306,29 +407,96 @@ export function DocumentPanel({ document }: { document: PanelDocument }) {
   );
 }
 
+function segmentClass(active: boolean) {
+  return cn(
+    "h-7 cursor-pointer rounded-md px-3 text-[13px] font-medium text-ink-2 transition-colors outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50",
+    active && "bg-background text-foreground shadow-[0_1px_2px_#1c1a171f]",
+  );
+}
+
+/** Width the sheet needs to show unscaled: the sheet plus the body gutters. */
+function measurePageWidth(frame: HTMLIFrameElement) {
+  try {
+    const doc = frame.contentDocument;
+    const sheet = doc?.querySelector<HTMLElement>(".sheet");
+    if (!doc || !sheet) return null;
+    const body = doc.defaultView?.getComputedStyle(doc.body);
+    const gutters =
+      (Number.parseFloat(body?.paddingLeft ?? "0") || 0) +
+      (Number.parseFloat(body?.paddingRight ?? "0") || 0);
+    return sheet.offsetWidth + gutters;
+  } catch {
+    // Not reachable (e.g. a sandbox change): keep the fallback.
+    return null;
+  }
+}
+
 function PreviewFrame({
   html,
+  mode,
   title,
   iframeRef,
 }: {
   html: string;
+  mode: DocumentPreviewMode;
   title: string;
   iframeRef: RefObject<HTMLIFrameElement | null>;
 }) {
   const [loaded, setLoaded] = useState(false);
+  const srcDoc = useMemo(() => withPreviewStyles(html, mode), [html, mode]);
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ width: number; height: number } | null>(
+    null,
+  );
+  const [pageWidth, setPageWidth] = useState(FALLBACK_PAGE_WIDTH);
+
+  // "Página" scales the frame to the panel, so it needs the panel's size.
+  useLayoutEffect(() => {
+    const node = boxRef.current;
+    if (mode !== "page" || !node) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setBox({ width, height });
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [mode]);
+
+  // Shrink only: a panel wider than the page shows it at its real size.
+  const scale = mode === "page" && box ? Math.min(1, box.width / pageWidth) : 1;
+  const scaled = box !== null && scale < 1;
+
   return (
-    <iframe
-      ref={iframeRef}
-      title={title}
-      srcDoc={html}
-      // No scripts: the preview is static HTML made from model output.
-      // Same-origin is needed so the print button can reach the frame.
-      sandbox="allow-same-origin allow-modals allow-popups allow-popups-to-escape-sandbox"
-      onLoad={() => setLoaded(true)}
-      className={cn(
-        "size-full border-0 bg-white transition-opacity duration-200 motion-reduce:transition-none",
-        loaded ? "opacity-100" : "opacity-0",
-      )}
-    />
+    <div ref={boxRef} className="absolute inset-0 overflow-hidden">
+      <iframe
+        ref={iframeRef}
+        title={title}
+        srcDoc={srcDoc}
+        // No scripts: the preview is static HTML made from model output.
+        // Same-origin is needed so the print button can reach the frame.
+        sandbox="allow-same-origin allow-modals allow-popups allow-popups-to-escape-sandbox"
+        onLoad={(e) => {
+          const measured = measurePageWidth(e.currentTarget);
+          if (measured) setPageWidth(measured);
+          setLoaded(true);
+        }}
+        style={
+          scaled
+            ? {
+                // Laid out at the page's width, then shrunk to the panel.
+                width: pageWidth,
+                height: box.height / scale,
+                transform: `scale(${scale})`,
+                transformOrigin: "0 0",
+              }
+            : undefined
+        }
+        className={cn(
+          "border-0 bg-white transition-opacity duration-200 motion-reduce:transition-none",
+          !scaled && "size-full",
+          loaded ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </div>
   );
 }

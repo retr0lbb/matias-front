@@ -29,6 +29,11 @@ export type LiveTool = {
 
 /** The reply being streamed right now, rebuilt from the SSE events. */
 export type LiveReply = {
+  /**
+   * Client-side key for this turn, kept by the final message (`clientKey`)
+   * so the reply's list item survives the commit instead of remounting.
+   */
+  key: string;
   /** `null` until the `start` event of a new chat arrives. */
   conversationId: string | null;
   startedAt: number;
@@ -153,6 +158,7 @@ function finalize(
   const thinkingEnd = live.thinkingEndedAt ?? Date.now();
   return {
     id,
+    clientKey: live.key,
     role: "assistant",
     thinking: live.thinking.trim()
       ? {
@@ -326,6 +332,7 @@ export const useChatStore = create<ChatState>()((set, get) => {
       const signal = controller.signal;
       set({
         live: {
+          key: localId("reply"),
           conversationId,
           startedAt: Date.now(),
           stage: "sending",
@@ -432,8 +439,25 @@ export const useChatStore = create<ChatState>()((set, get) => {
       commitTimer = null;
       const live = get().live;
       if (!live?.ending) return;
-      append(live.conversationId ?? NEW_CHAT_ID, live.ending);
-      set({ live: null });
+      // One update: the reply never disappears or shows twice in between.
+      const conversationId = live.conversationId ?? NEW_CHAT_ID;
+      const ending = live.ending;
+      set((state) => {
+        const thread = state.threads[conversationId] ?? {
+          title: null,
+          messages: [],
+        };
+        return {
+          live: null,
+          threads: {
+            ...state.threads,
+            [conversationId]: {
+              ...thread,
+              messages: [...thread.messages, ending],
+            },
+          },
+        };
+      });
       // `updatedAt` changed, so the chat moves to the top of the list.
       useConversationsStore.getState().load(true);
     },

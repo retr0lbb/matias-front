@@ -49,6 +49,8 @@ export type ToolCall = { name: string; ok: boolean };
 
 export type AssistantMessage = {
   id: string;
+  /** Set on replies streamed in this session: the live reply's list key. */
+  clientKey?: string;
   role: "assistant";
   thinking?: DetailedThinking;
   tools?: ToolCall[];

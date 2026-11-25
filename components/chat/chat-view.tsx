@@ -71,25 +71,38 @@ export function ChatView({ conversationId }: { conversationId: string }) {
         <MessageScroller className="flex-1">
           <MessageScrollerViewport aria-label="Mensagens da conversa">
             <MessageScrollerContent className="mx-auto w-full max-w-180 gap-6 px-4 pt-4 pb-8 md:px-6">
-              {messages.map((message) => (
-                <MessageScrollerItem
-                  key={message.id}
-                  messageId={message.id}
-                  scrollAnchor={message.role === "user"}
-                >
-                  {message.role === "user" ? (
-                    <UserMessage message={message} />
-                  ) : (
-                    // No regenerate: the backend has no route for it yet.
-                    <AssistantMessage message={message} />
-                  )}
-                </MessageScrollerItem>
-              ))}
-              {liveHere && (
-                <MessageScrollerItem messageId="live">
-                  <LiveAssistantMessage live={liveHere} />
-                </MessageScrollerItem>
-              )}
+              {/* One keyed list: a finished reply keeps the live reply's key
+                  (`clientKey`), so its item stays mounted. Remounting it made
+                  the scroller jump back to the start of the turn. */}
+              {[
+                ...messages.map((message) => {
+                  const key =
+                    (message.role === "assistant" && message.clientKey) ||
+                    message.id;
+                  return (
+                    <MessageScrollerItem
+                      key={key}
+                      messageId={key}
+                      scrollAnchor={message.role === "user"}
+                    >
+                      {message.role === "user" ? (
+                        <UserMessage message={message} />
+                      ) : (
+                        // No regenerate: the backend has no route for it yet.
+                        <AssistantMessage message={message} />
+                      )}
+                    </MessageScrollerItem>
+                  );
+                }),
+                liveHere && (
+                  <MessageScrollerItem
+                    key={liveHere.key}
+                    messageId={liveHere.key}
+                  >
+                    <LiveAssistantMessage live={liveHere} />
+                  </MessageScrollerItem>
+                ),
+              ]}
             </MessageScrollerContent>
           </MessageScrollerViewport>
           <MessageScrollerButton />
